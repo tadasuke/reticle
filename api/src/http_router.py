@@ -85,7 +85,11 @@ def _route_key(event: dict[str, Any]) -> tuple[str, str]:
         or "GET"
     ).upper()
     raw_path = event.get("rawPath") or event.get("path") or "/"
-    return method, unquote(raw_path)
+    path = unquote(raw_path)
+    stage = event.get("requestContext", {}).get("stage", "")
+    if stage and path.startswith(f"/{stage}"):
+        path = path[len(stage) + 1 :] or "/"
+    return method, path
 
 
 _USER_CONVERSATIONS_RE = re.compile(r"^/users/(?P<user_id>[^/]+)/ai-conversations$")
