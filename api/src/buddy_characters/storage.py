@@ -28,18 +28,26 @@ def _reference_url(buddy_id: str) -> str:
 
 
 def has_reference_image(buddy_id: str) -> bool:
-    return _reference_path(buddy_id).exists()
+    if _reference_path(buddy_id).exists():
+        return True
+    from src.s3_assets import has_reference_object
+
+    return has_reference_object("buddies", buddy_id)
 
 
 def list_buddy_ids() -> list[str]:
     root = get_buddies_root()
-    if not root.exists():
-        return []
-    ids: list[str] = []
-    for path in sorted(root.iterdir()):
-        if path.is_dir() and (path / PERSONA_FILENAME).exists():
-            ids.append(path.name)
-    return ids
+    ids: set[str] = set()
+    if root.exists():
+        for path in sorted(root.iterdir()):
+            if path.is_dir() and (path / PERSONA_FILENAME).exists():
+                ids.add(path.name)
+
+    from src.s3_assets import list_asset_ids
+
+    for asset_id in list_asset_ids("buddies"):
+        ids.add(asset_id)
+    return sorted(ids)
 
 
 def _parse_persona_data(buddy_id: str, data: dict[str, Any]) -> BuddyPersonaSpec:
@@ -83,11 +91,17 @@ def _parse_persona_data(buddy_id: str, data: dict[str, Any]) -> BuddyPersonaSpec
 def load_persona(buddy_id: str) -> BuddyPersonaSpec:
     buddy_id = validate_buddy_id(buddy_id)
     path = _persona_path(buddy_id)
-    if not path.exists():
-        raise ValueError(f"Buddy character not found: {buddy_id}")
+    data: dict[str, Any] | None = None
+    if path.exists():
+        with path.open(encoding="utf-8") as f:
+            data = yaml.safe_load(f) or {}
+    else:
+        from src.s3_assets import load_persona_yaml
 
-    with path.open(encoding="utf-8") as f:
-        data = yaml.safe_load(f) or {}
+        data = load_persona_yaml("buddies", buddy_id)
+
+    if not data:
+        raise ValueError(f"Buddy character not found: {buddy_id}")
 
     return _parse_persona_data(buddy_id, data)
 
