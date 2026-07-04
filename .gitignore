@@ -13,5 +13,15 @@ api/.venv
 .DS_Store
 *.log
 
+# Python
+__pycache__/
+*.py[cod]
+
+# SAM local build
+.aws-sam/
+
+# Cursor generated reviews
+.cursor/reviews/
+
 # TypeScript
 *.tsbuildinfo
