@@ -51,10 +51,15 @@ def has_reference_object(category: str, asset_id: str) -> bool:
     if not bucket:
         return False
 
-    key = f"{category}/{asset_id}/reference.png"
     client = boto3.client("s3")
-    try:
-        client.head_object(Bucket=bucket, Key=key)
-        return True
-    except ClientError:
-        return False
+    candidates = {asset_id, asset_id.lower(), asset_id.capitalize()}
+    if asset_id:
+        candidates.add(asset_id[0].upper() + asset_id[1:])
+    for candidate in candidates:
+        key = f"{category}/{candidate}/reference.png"
+        try:
+            client.head_object(Bucket=bucket, Key=key)
+            return True
+        except ClientError:
+            continue
+    return False
