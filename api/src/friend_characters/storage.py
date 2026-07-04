@@ -35,11 +35,12 @@ def _reference_url(friend_id: str) -> str:
 
 
 def has_reference_image(friend_id: str) -> bool:
-    if _reference_path(friend_id).exists():
+    original_id = friend_id.strip()
+    if (get_friend_dir(original_id) / REFERENCE_FILENAME).exists():
         return True
     from src.s3_assets import has_reference_object
 
-    return has_reference_object("friends", friend_id)
+    return has_reference_object("friends", original_id)
 
 
 def list_friend_ids() -> list[str]:
@@ -107,21 +108,22 @@ def _parse_persona_data(friend_id: str, data: dict[str, Any]) -> FriendPersonaSp
 
 
 def load_persona(friend_id: str) -> FriendPersonaSpec:
-    friend_id = validate_friend_id(friend_id)
-    path = _persona_path(friend_id)
+    original_id = friend_id.strip()
+    normalized_id = validate_friend_id(original_id)
+    local_path = get_friend_dir(original_id) / PERSONA_FILENAME
     data: dict[str, Any] | None = None
-    if path.exists():
-        with path.open(encoding="utf-8") as f:
+    if local_path.exists():
+        with local_path.open(encoding="utf-8") as f:
             data = yaml.safe_load(f) or {}
     else:
         from src.s3_assets import load_persona_yaml
 
-        data = load_persona_yaml("friends", friend_id)
+        data = load_persona_yaml("friends", original_id)
 
     if not data:
-        raise ValueError(f"Friend character not found: {friend_id}")
+        raise ValueError(f"Friend character not found: {original_id}")
 
-    return _parse_persona_data(friend_id, data)
+    return _parse_persona_data(normalized_id, data)
 
 
 def _persona_to_dict(spec: FriendPersonaSpec) -> dict[str, Any]:
