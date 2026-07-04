@@ -78,23 +78,50 @@ alwaysApply: true
 
 ## AIモード会話フロー
 
-1. **モード選択画面**（`/`）で AIモードを選択 → **AIトップ画面**（`/ai`）
-2. ユーザーが **AIフレンド・バディのタイプ**を選択してスタート（シナリオは固定）
-3. 選んだ AI フレンドが英語で話しかける（テキスト表示）
-4. **AIトップ画面**で**サポートタイプ**（High / Middle / Low）を選択（初期値 Middle）。**AIトーク画面**のバディパネルでも会話中に切り替え可
-5. ユーザーが英語でテキスト入力して返答
-6. サポートタイプに応じてバディが自動支援（手動相談は全タイプで可能）:
+1. **ログイン画面** — userId のみ入力（パスワードなし）。未登録 ID は自動作成。ブラウザ再起動のたびに再入力（localStorage 自動ログインなし）
+2. **AIトップ画面** — 過去の **AI会話** 一覧（`lastInteractionAt` 降順）を表示。一覧から選択して再開、または「新しい会話を始める」
+3. **新規会話** — AIフレンド・バディ・**サポートタイプ**を選択して開始（シナリオは SNS 初チャット固定・選択 UI なし）
+4. 選んだ AI フレンドが英語で話しかける（テキスト表示）
+5. 会話履歴（friend + buddy 両チャンネル）は **DynamoDB** にユーザごと永続化。メッセージ追加・巻き戻し・サポートタイプ変更・**バディ変更**後に API 経由で保存
+6. ユーザーが英語でテキスト入力して返答
+7. サポートタイプに応じてバディが自動支援（手動相談は全タイプで可能）:
    - **High**: Middle の添削に加え、AI フレンドのメッセージ（オープニング含む）表示直後に日本語訳・おすすめ返答などを提示
    - **Middle**: ユーザーが AI フレンドへ英語送信直後に、英語の添削・アドバイス（AI フレンド返答と並列表示）
    - **Low**: 自動送信なし。ユーザーがバディへ話しかけるまでバディからメッセージは来ない
-7. 困ったら選んだバディに日本語で相談（手動）
-8. **バディへの翻訳依頼** — 「翻訳して」「どういう意味？」等の翻訳依頼を検知した場合、通常 consult ではなく専用 translate API（`mode: 'translate'`, `conversationMode: 'ai'`）を使用。AI フレンドの**最後の発言**（`speaker: 'friend'`）を**全文**日本語訳し、バディ口調の短い前置き + 訳文を返す。フレンド発言がまだない場合は API を呼ばずバディが案内する。文法・返信例など通常の相談は従来の consult のまま
-9. バディのアドバイスをもとに AI フレンドへ返答
-10. **AI フレンドとの会話を巻き戻し** — **AI フレンドのメッセージ**（最終メッセージ除く）に「ここまで戻る」ボタン。ユーザーの送信済みメッセージには表示しない。確認後、選択位置以降のフレンドチャンネルメッセージのみ削除（バディの相談・自動支援は残す）。送信中・タイピング中は無効
+8. 困ったら選んだバディに日本語で相談（手動）
+9. **バディへの翻訳依頼** — 「翻訳して」「どういう意味？」等の翻訳依頼を検知した場合、通常 consult ではなく専用 translate API（`mode: 'translate'`, `conversationMode: 'ai'`）を使用。AI フレンドの**最後の発言**（`speaker: 'friend'`）を**全文**日本語訳し、バディ口調の短い前置き + 訳文を返す。フレンド発言がまだない場合は API を呼ばずバディが案内する。文法・返信例など通常の相談は従来の consult のまま
+10. バディのアドバイスをもとに AI フレンドへ返答
+11. **AI フレンドとの会話を巻き戻し** — **AI フレンドのメッセージ**（最終メッセージ除く）に「ここまで戻る」ボタン。ユーザーの送信済みメッセージには表示しない。確認後、選択位置以降のフレンドチャンネルメッセージのみ削除（バディの相談・自動支援は残す）。送信中・タイピング中は無効。巻き戻し結果も DynamoDB に保存
+12. **バディの変更** — AIトーク画面のバディパネルで会話中にバディを切り替え可能。バディチャンネルの履歴は残し、以降の相談・自動支援は新バディの口調で返答。`buddyTypeId` は PATCH API で永続化
+13. AIトーク画面の「戻る」は一覧へ戻る（会話履歴は削除しない）
 
-## リアルモード会話フロー
+### AIモード API（ユーザ・会話永続化）
 
-1. **モード選択画面**（`/`）でリアルモードを選択 → **リアルトーク画面**（`/real`）を表示（3カラム）
+| Method | Path | 用途 |
+|--------|------|------|
+| `POST` | `/users/login` | ログイン（未登録 ID は自動作成） |
+| `GET` | `/users/{userId}/ai-conversations` | AI会話一覧 |
+| `POST` | `/users/{userId}/ai-conversations` | 新規 AI会話作成 |
+| `GET` | `/users/{userId}/ai-conversations/{convId}` | AI会話取得 |
+| `PUT` | `/users/{userId}/ai-conversations/{convId}/messages` | メッセージ保存 |
+| `PATCH` | `/users/{userId}/ai-conversations/{convId}` | メタ更新（`supportType` / `buddyTypeId`） |
+
+認可: `X-User-Id` ヘッダが path の `{userId}` と一致すること。パスワード検証なし（userId を知る第三者が同データにアクセス可能な簡易認証）。
+
+**DynamoDB テーブル** `buddy-talk`（シングルテーブル）:
+
+| PK | SK | 内容 |
+|----|-----|------|
+| `USER#{userId}` | `PROFILE` | ユーザプロフィール |
+| `USER#{userId}` | `CONV#{conversationId}` | AI会話メタ + `messages[]` |
+
+develop: DynamoDB Local（`docker-compose` + `:8001`）。staging/product: AWS DynamoDB（IaC は未整備、手動テーブル作成）。
+
+## リアルモード会話フロー（隠し機能）
+
+UI 導線なし。**`/real` 直アクセスのみ**で利用可能。
+
+1. **リアルトーク画面**（`/real`）を表示（3カラム）
 2. 左サイドバーにリアルフレンド一覧（最終やり取り降順）。先頭を自動選択して会話をロード。友だち0人の場合は中央に空状態
 3. ヘッダーでバディを選択（初回のみ。`localStorage` に保存し、フレンド切替・リロード後も固定）。サポートタイプ選択 UI なし、**High 固定**
 4. 中央フレンドパネルで Tinder 等からコピペ:
@@ -148,15 +175,15 @@ alwaysApply: true
 
 ### 画面構成
 
-0. **モード選択画面** — `/`。AIモード（`/ai`）とリアルモード（`/real`）を選択
-1. **AIトップ画面** — `/ai`。AIフレンド（管理画面で登録）・バディ（`persona.yaml`）・**サポートタイプ**を選択し「会話を始める」（シナリオは SNS 初チャット固定・選択 UI なし。AI モデルは Qwen 固定・選択 UI なし）
-2. **AIトーク画面** — `/ai`（会話中）。左右分割
+0. **ログイン画面** — `/`。userId のみ入力でログイン（AIモード必須。リアルモード・管理者画面はログイン不要）
+1. **AIトップ画面** — `/`（ログイン後）。過去 AI会話一覧 + 「新しい会話を始める」。新規時は AIフレンド・バディ・**サポートタイプ**を選択（シナリオは SNS 初チャット固定・選択 UI なし。AI モデルは Qwen 固定・選択 UI なし）。旧 `/ai` は `/` へリダイレクト
+2. **AIトーク画面** — `/`（会話中）。左右分割
    - 左: AI フレンドとの英語会話（履歴 + 英語入力）
-   - 右: バディへの日本語相談（履歴 + 日本語入力）。ヘッダーに**サポートタイプ**（High / Middle / Low）切り替え UI
+   - 右: バディへの日本語相談（履歴 + 日本語入力）。バディパネルに**バディ選択**（会話中変更可）と**サポートタイプ**（High / Middle / Low）切り替え UI
    - モバイルは縦積み（`md:` 以上で左右分割）
    - フレンド / バディそれぞれのメッセージエリアは**個別にスクロール**
    - フレンドパネルヘッダーに `reference.png` を表示（`FriendType.referenceUrl` → `GET /media/friends/*`）
-3. **リアルトーク画面** — `/real`。3カラム（`md:` 以上）
+3. **リアルトーク画面** — `/real`（隠し機能。UI 導線なし、URL 直アクセスのみ）。3カラム（`md:` 以上）
    - 左: リアルフレンド一覧（最終やり取り降順）。クリックで会話切替。下部に新規登録導線
    - 中: リアルフレンドとの会話記録（Tinder 等からコピペ。相手・自分の2ボタン）。各英文下に日本語訳
    - 右: バディへの日本語相談。**サポートタイプ High 固定**（切替 UI なし）
@@ -199,26 +226,31 @@ alwaysApply: true
 
 ```
 src/
-  types/conversation.ts, characterImageStudio.ts, friendCharacter.ts, realFriend.ts
+  types/conversation.ts, characterImageStudio.ts, friendCharacter.ts, realFriend.ts, user.ts, aiConversation.ts
   data/scenarios.ts, aiModels.ts
-  lib/apiClient.ts, adminApiClient.ts, realApiClient.ts, realModeStorage.ts
-  hooks/useConversation.ts, useCharacterImageStudio.ts, useFriendCharacterAdmin.ts
+  lib/apiClient.ts, adminApiClient.ts, realApiClient.ts, realModeStorage.ts, userApiClient.ts
+  hooks/useAuth.ts, useAiConversations.ts, useConversation.ts, useCharacterImageStudio.ts, useFriendCharacterAdmin.ts
   hooks/useRealFriends.ts, useRealConversation.ts
   admin/CharacterImageStudio.tsx, FriendCharacterAdmin.tsx, admin/components/
   components/
-    mode/ModeSelect.tsx
+    auth/LoginScreen.tsx
     scenario/ScenarioSelect.tsx
-    conversation/ConversationLayout, FriendPanel, BuddyPanel, MessageList, MessageBubble, ChatInput
+    conversation/ConversationLayout, AiConversationHome, FriendPanel, BuddyPanel, MessageList, MessageBubble, ChatInput
     common/LoadingIndicator, ErrorBanner
   real/RealApp.tsx, RealConversationLayout.tsx, RealFriendPanel.tsx, RealFriendSidebar.tsx, RealFriendMessageList.tsx, RealFriendFormModal.tsx
 api/
   local_server.py
   src/conversation_service.py, prompts.py, scenarios.py, character_types.py, handler.py
+  src/db/client.py, keys.py
+  src/users/
+  src/ai_conversations/
   src/character_image_studio/
   src/friend_characters/
   src/buddy_characters/
   src/real_friends/
   src/assets_paths.py
+scripts/init_dynamodb_local.py
+docker-compose.yml
 assets/
   friends/{friendId}/persona.yaml, reference.png（手動配置）
   buddies/{buddyId}/persona.yaml, reference.png（手動配置）
@@ -303,6 +335,10 @@ aliyun sts GetCallerIdentity --profile fod-short
 - `REAL_FRIENDS_ASSETS_DIR` — リアルフレンドデータ保存先（デフォルト: `../assets/real-friends`）
 - `BUDDY_ASSETS_DIR` — バディデータ保存先（デフォルト: `../assets/buddies`）
 - `IMAGE_ASSETS_DIR` — 画像作成データ保存先（デフォルト: `../assets/images`）
+- `DYNAMODB_ENDPOINT` — DynamoDB Local エンドポイント（develop のみ。例: `http://localhost:8001`）
+- `DYNAMODB_TABLE_NAME` — DynamoDB テーブル名（デフォルト: `buddy-talk`）
+- `AWS_REGION` — AWS リージョン（デフォルト: `ap-northeast-1`）
+- `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` — DynamoDB Local 用ダミー（develop）。staging/product では IAM ロールまたは実認証情報
 
 ### 起動方法
 
@@ -314,7 +350,7 @@ Agent モードのチャットで次のように依頼する:
 開発環境を起動して
 ```
 
-または `start-dev` スキルを明示する。エージェントが `.cursor/skills/start-dev/SKILL.md` に従い、API（`:8000`）とフロント（`:5173`）をバックグラウンドで起動する。API 起動時は DashScope（Qwen）への HTTPS が必要なため、エージェントの Shell では `full_network` 権限を使う。起動後に `POST /conversation`（translate）で Qwen 接続を確認する。`:8000` が応答しても Qwen が `Connection error` の場合は、サンドボックス制限付きで起動した API の可能性があるため、既存 uvicorn を止めて再起動する（手動ターミナル起動でも可）。
+または `start-dev` スキルを明示する。エージェントが `.cursor/skills/start-dev/SKILL.md` に従い、**Docker Desktop 起動（手動）後**に DynamoDB Local（`docker compose up -d dynamodb-local` + `scripts/init_dynamodb_local.py`）→ API（`:8000`）→ フロント（`:5173`）の順で起動する。
 
 **初回セットアップ**
 
@@ -336,7 +372,14 @@ cp .env.example .env
 # .env に VITE_API_BASE_URL=http://localhost:8000 を設定
 ```
 
-**手動起動（ターミナル 2 本）**
+**手動起動（ターミナル 3 本 + Docker）**
+
+DynamoDB Local:
+
+```bash
+docker compose up -d dynamodb-local
+cd api && source .venv/bin/activate && python ../scripts/init_dynamodb_local.py
+```
 
 API（ターミナル 1）:
 
@@ -370,8 +413,8 @@ npm run dev
 - 管理者画面の認証・staging/Lambda デプロイ
 - 音声入力（マイクボタン）
 - 音声出力（AI フレンド返答の自動読み上げ）
-- AIモードの学習履歴の保存
 - シナリオの追加
+- staging/product 向け users / ai-conversations API の Lambda ルーティング・IaC
 
 ## Notion（仕様の正本）
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BUDDY_SUPPORT_TYPES, DEFAULT_BUDDY_SUPPORT_TYPE } from '../../data/buddySupportTypes';
+import { BUDDY_SUPPORT_TYPES, DEFAULT_BUDDY_SUPPORT_TYPE, getBuddySupportTypeOption } from '../../data/buddySupportTypes';
 import { DEFAULT_SCENARIO_ID } from '../../data/scenarios';
 import { fetchBuddyTypes, fetchFriendTypes, getMediaUrl } from '../../lib/apiClient';
 import type { StartScenarioOptions } from '../../hooks/useConversation';
@@ -9,6 +9,7 @@ import { LoadingIndicator } from '../common/LoadingIndicator';
 
 type ScenarioSelectProps = {
   onSelect: (options: StartScenarioOptions) => void;
+  onBack?: () => void;
   isLoading?: boolean;
   error?: string | null;
   onDismissError?: () => void;
@@ -92,6 +93,7 @@ function FriendTypeCard({
 
 export function ScenarioSelect({
   onSelect,
+  onBack,
   isLoading = false,
   error = null,
   onDismissError,
@@ -133,8 +135,7 @@ export function ScenarioSelect({
   const selectedFriendType = friendTypes.find((type) => type.id === friendTypeId) ?? friendTypes[0];
   const selectedBuddyType =
     buddyTypes.find((type) => type.id === buddyTypeId) ?? buddyTypes[0];
-  const selectedSupportOption =
-    BUDDY_SUPPORT_TYPES.find((option) => option.id === supportType) ?? BUDDY_SUPPORT_TYPES[1];
+  const selectedSupportOption = getBuddySupportTypeOption(supportType);
   const hasFriends = friendTypes.length > 0;
   const hasBuddies = buddyTypes.length > 0;
 
@@ -142,6 +143,18 @@ export function ScenarioSelect({
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       <div className="mx-auto max-w-4xl px-4 py-12">
         <header className="mb-10 text-center">
+          {onBack ? (
+            <div className="mb-4 flex justify-start">
+              <button
+                type="button"
+                onClick={onBack}
+                disabled={isLoading}
+                className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                一覧に戻る
+              </button>
+            </div>
+          ) : null}
           <p className="text-sm font-medium uppercase tracking-wide text-blue-600">AIモード</p>
           <h1 className="mt-2 text-3xl font-bold text-gray-900">AIトップ画面</h1>
           <p className="mt-3 text-gray-600">
@@ -273,9 +286,6 @@ export function ScenarioSelect({
             会話を始める
           </button>
           <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-500">
-            <a href="/" className="underline-offset-2 hover:text-gray-700 hover:underline">
-              モード選択に戻る
-            </a>
             <a
               href="/admin/friend-characters"
               className="underline-offset-2 hover:text-gray-700 hover:underline"

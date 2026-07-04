@@ -8,16 +8,6 @@ import { RealConversationLayout } from './RealConversationLayout';
 import { RealFriendFormModal } from './RealFriendFormModal';
 import type { BuddyType } from '../types/conversation';
 
-// #region agent log
-function dbg(location: string, message: string, data: Record<string, unknown>, hypothesisId: string) {
-  fetch('http://127.0.0.1:7250/ingest/989a1cc2-ba98-4ec6-9f19-23ab7217ba35', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '85014f' },
-    body: JSON.stringify({ sessionId: '85014f', location, message, data, hypothesisId, timestamp: Date.now() }),
-  }).catch(() => {});
-}
-// #endregion
-
 export function RealApp() {
   const {
     realFriends,
@@ -112,15 +102,6 @@ export function RealApp() {
   }, [loading.list, friendsLoaded]);
 
   useEffect(() => {
-    // #region agent log
-    dbg('RealApp.tsx:mount', 'component mounted', { selectedFriendId, storedFriendId: getStoredFriendId() }, 'C');
-    return () => {
-      dbg('RealApp.tsx:unmount', 'component unmounted', {}, 'C');
-    };
-    // #endregion
-  }, []);
-
-  useEffect(() => {
     let cancelled = false;
     fetchBuddyTypes()
       .then((buddies) => {
@@ -148,12 +129,8 @@ export function RealApp() {
     const stored = getStoredFriendId();
     const storedFriend = stored ? realFriends.find((f) => f.id === stored) : undefined;
     const targetId = storedFriend?.id ?? realFriends[0].id;
-    const targetLabel = storedFriend?.label ?? realFriends[0].label;
 
     hasInitializedSelectionRef.current = true;
-    // #region agent log
-    dbg('RealApp.tsx:autoInit', 'auto-select friend', { targetId, targetLabel, fromStorage: !!storedFriend }, 'C');
-    // #endregion
     setStoredFriendId(targetId);
     setSelectedFriendId(targetId);
   }, [loading.list, loadingBuddies, buddyTypeId, realFriends]);
@@ -164,49 +141,23 @@ export function RealApp() {
       lastAppliedSelectionRef.current?.friendId === selectedFriendId &&
       lastAppliedSelectionRef.current?.buddyTypeId === buddyTypeId
     ) {
-      // #region agent log
-      dbg('RealApp.tsx:switchEffect', 'skip redundant switch', {
-        selectedFriendId,
-        buddyTypeId,
-      }, 'A');
-      // #endregion
       return;
     }
     const friend = realFriendsRef.current.find((item) => item.id === selectedFriendId);
     if (!friend) {
-      // #region agent log
-      dbg('RealApp.tsx:switchEffect', 'friend not in list yet', { selectedFriendId }, 'C');
-      // #endregion
       return;
     }
     lastAppliedSelectionRef.current = { friendId: selectedFriendId, buddyTypeId };
-    // #region agent log
-    dbg('RealApp.tsx:switchEffect', 'effect calls switchConversation', {
-      selectedFriendId,
-      friendLabel: friend.label,
-      buddyTypeId,
-      realFriendId: realFriend?.id ?? null,
-    }, 'A');
-    // #endregion
     void switchConversationRef.current(friend, buddyTypeId);
   }, [selectedFriendId, buddyTypeId, friendsLoaded]);
 
   const handleSelectFriend = useCallback((friendId: string) => {
     if (!buddyTypeId) return;
     if (friendId === selectedFriendId) return;
-    const friend = realFriends.find((f) => f.id === friendId);
-    // #region agent log
-    dbg('RealApp.tsx:handleSelectFriend', 'user clicked friend', {
-      friendId,
-      friendLabel: friend?.label ?? '?',
-      prevSelected: selectedFriendId,
-      currentRealFriendId: realFriend?.id ?? null,
-    }, 'C');
-    // #endregion
     lastAppliedSelectionRef.current = null;
     setStoredFriendId(friendId);
     setSelectedFriendId(friendId);
-  }, [buddyTypeId, realFriends, selectedFriendId, realFriend]);
+  }, [buddyTypeId, selectedFriendId]);
 
   const handleBuddyChange = useCallback(
     (buddyId: string) => {

@@ -6,6 +6,9 @@ import { MessageList } from './MessageList';
 
 type BuddyPanelProps = {
   buddyType?: BuddyType;
+  buddyTypes?: BuddyType[];
+  onBuddyTypeChange?: (id: string) => void;
+  buddyTypeChangeDisabled?: boolean;
   supportType: BuddySupportType;
   onSupportTypeChange?: (type: BuddySupportType) => void;
   supportTypeFixed?: boolean;
@@ -18,6 +21,9 @@ type BuddyPanelProps = {
 
 export function BuddyPanel({
   buddyType,
+  buddyTypes,
+  onBuddyTypeChange,
+  buddyTypeChangeDisabled = false,
   supportType,
   onSupportTypeChange,
   supportTypeFixed = false,
@@ -61,6 +67,24 @@ export function BuddyPanel({
         <h2 className="text-base font-semibold text-emerald-900">{displayName}</h2>
         <p className="text-xs text-emerald-700">{subtitle}</p>
 
+        {buddyTypes && buddyTypes.length > 0 && onBuddyTypeChange && (
+          <div className="mt-3">
+            <p className="mb-1.5 text-xs font-medium text-emerald-800">バディ</p>
+            <select
+              value={buddyType?.id ?? ''}
+              onChange={(e) => onBuddyTypeChange(e.target.value)}
+              disabled={buddyTypeChangeDisabled}
+              className="w-full rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm text-emerald-900 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {buddyTypes.map((type) => (
+                <option key={type.id} value={type.id}>
+                  {type.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <div className="mt-3">
           <p className="mb-1.5 text-xs font-medium text-emerald-800">サポートタイプ</p>
           {supportTypeFixed ? (
@@ -103,7 +127,7 @@ export function BuddyPanel({
 
       <div className="shrink-0">
         <ChatInput
-          ref={inputRef}
+          inputRef={inputRef}
           peerInputRef={peerInputRef}
           placeholder="日本語で相談..."
           onSend={handleSend}

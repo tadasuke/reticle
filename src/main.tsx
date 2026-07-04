@@ -1,7 +1,6 @@
 import { StrictMode, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
-import { ModeSelect } from './components/mode/ModeSelect';
 import { CharacterImageStudio } from './admin/CharacterImageStudio';
 import { FriendCharacterAdmin } from './admin/FriendCharacterAdmin';
 import { RealApp } from './real/RealApp';
@@ -22,7 +21,7 @@ function AdminRouter() {
   if (pathname.startsWith('/admin/character-images')) {
     return <CharacterImageStudio />;
   }
-  return <ModeSelect />;
+  return <App />;
 }
 
 function AppRouter() {
@@ -31,20 +30,18 @@ function AppRouter() {
     return () => setPageTitle();
   }, []);
 
-  if (pathname === '/' || pathname === '') {
-    return <ModeSelect />;
-  }
-  if (pathname.startsWith('/ai')) {
-    return <App />;
-  }
   if (pathname.startsWith('/real')) {
     return <RealApp />;
   }
-  return <ModeSelect />;
+  return <App />;
 }
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    {pathname.startsWith('/admin/') ? <AdminRouter /> : <AppRouter />}
-  </StrictMode>,
-);
+if (pathname.startsWith('/ai')) {
+  window.location.replace('/');
+} else {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      {pathname.startsWith('/admin/') ? <AdminRouter /> : <AppRouter />}
+    </StrictMode>,
+  );
+}

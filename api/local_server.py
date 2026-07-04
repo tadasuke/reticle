@@ -1,8 +1,9 @@
+import logging
 import os
 from typing import Any, Literal
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, Header, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -20,6 +21,15 @@ from src.character_image_studio.handler import (
 )
 from src.character_types import DEFAULT_BUDDY_TYPE, is_valid_buddy_type, is_valid_friend_type
 from src.conversation_service import handle_conversation_request
+from src.ai_conversations.handler import (
+    ConversationNotFoundError,
+    create_user_conversation,
+    get_user_conversation,
+    list_user_conversations,
+    patch_user_conversation,
+    put_user_conversation_messages,
+)
+from src.users.handler import InvalidUserIdError, login_user, normalize_user_id
 from src.buddy_characters.handler import list_buddy_types
 from src.friend_characters.handler import (
     create_friend_type,
@@ -43,6 +53,8 @@ from src.real_friends.handler import (
 )
 
 load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Buddy Talk API")
 
@@ -180,6 +192,44 @@ class RealFriendDefaultPhotoRequest(BaseModel):
     photoId: str
 
 
+class UserLoginRequest(BaseModel):
+    userId: str
+
+
+class AiConversationCreateRequest(BaseModel):
+    scenarioId: Literal["casual", "cafe", "bar", "sns"] = "sns"
+    friendTypeId: str
+    buddyTypeId: str
+    supportType: Literal["high", "middle", "low"] = "middle"
+
+
+class AiConversationMessagesRequest(BaseModel):
+    messages: list[MessagePayload]
+
+
+class AiConversationPatchRequest(BaseModel):
+    supportType: Literal["high", "middle", "low"] | None = None
+    buddyTypeId: str | None = None
+
+
+def require_matching_user(user_id: str, x_user_id: str | None) -> str:
+    try:
+        normalized_path = normalize_user_id(user_id)
+    except InvalidUserIdError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    if not x_user_id:
+        raise HTTPException(status_code=401, detail="X-User-Id header is required")
+    try:
+        normalized_header = normalize_user_id(x_user_id)
+    except InvalidUserIdError as exc:
+        raise HTTPException(status_code=401, detail=str(exc)) from exc
+
+    if normalized_header != normalized_path:
+        raise HTTPException(status_code=403, detail="X-User-Id does not match path userId")
+    return normalized_path
+
+
 @app.get("/friend-types")
 def public_list_friend_types() -> dict[str, Any]:
     return {"friendTypes": list_friend_types(include_disabled=False)}
@@ -190,27 +240,123 @@ def public_list_buddy_types() -> dict[str, Any]:
     return {"buddyTypes": list_buddy_types(include_disabled=False)}
 
 
+@app.post("/users/login")
+def public_login_user(request: UserLoginRequest) -> dict[str, Any]:
+    try:
+        return login_user(user_id=request.userId)
+    except InvalidUserIdError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.exception("Unhandled error in user login")
+        raise HTTPException(status_code=500, detail="Internal server error") from exc
+
+
+@app.get("/users/{user_id}/ai-conversations")
+def public_list_ai_conversations(
+    user_id: str,
+    x_user_id: str | None = Header(default=None, alias="X-User-Id"),
+) -> dict[str, Any]:
+    normalized = require_matching_user(user_id, x_user_id)
+    try:
+        return list_user_conversations(normalized)
+    except Exception as exc:
+        logger.exception("Unhandled error listing ai conversations")
+        raise HTTPException(status_code=500, detail="Internal server error") from exc
+
+
+@app.post("/users/{user_id}/ai-conversations")
+def public_create_ai_conversation(
+    user_id: str,
+    request: AiConversationCreateRequest,
+    x_user_id: str | None = Header(default=None, alias="X-User-Id"),
+) -> dict[str, Any]:
+    normalized = require_matching_user(user_id, x_user_id)
+    try:
+        return create_user_conversation(
+            normalized,
+            scenario_id=request.scenarioId,
+            friend_type_id=request.friendTypeId,
+            buddy_type_id=request.buddyTypeId,
+            support_type=request.supportType,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.exception("Unhandled error creating ai conversation")
+        raise HTTPException(status_code=500, detail="Internal server error") from exc
+
+
+@app.get("/users/{user_id}/ai-conversations/{conversation_id}")
+def public_get_ai_conversation(
+    user_id: str,
+    conversation_id: str,
+    x_user_id: str | None = Header(default=None, alias="X-User-Id"),
+) -> dict[str, Any]:
+    normalized = require_matching_user(user_id, x_user_id)
+    try:
+        return get_user_conversation(normalized, conversation_id)
+    except ConversationNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.exception("Unhandled error getting ai conversation")
+        raise HTTPException(status_code=500, detail="Internal server error") from exc
+
+
+@app.put("/users/{user_id}/ai-conversations/{conversation_id}/messages")
+def public_put_ai_conversation_messages(
+    user_id: str,
+    conversation_id: str,
+    request: AiConversationMessagesRequest,
+    x_user_id: str | None = Header(default=None, alias="X-User-Id"),
+) -> dict[str, Any]:
+    normalized = require_matching_user(user_id, x_user_id)
+    try:
+        return put_user_conversation_messages(
+            normalized,
+            conversation_id,
+            [message.model_dump() for message in request.messages],
+        )
+    except ConversationNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.exception("Unhandled error saving ai conversation messages")
+        raise HTTPException(status_code=500, detail="Internal server error") from exc
+
+
+@app.patch("/users/{user_id}/ai-conversations/{conversation_id}")
+def public_patch_ai_conversation(
+    user_id: str,
+    conversation_id: str,
+    request: AiConversationPatchRequest,
+    x_user_id: str | None = Header(default=None, alias="X-User-Id"),
+) -> dict[str, Any]:
+    normalized = require_matching_user(user_id, x_user_id)
+    try:
+        return patch_user_conversation(
+            normalized,
+            conversation_id,
+            support_type=request.supportType,
+            buddy_type_id=request.buddyTypeId,
+        )
+    except ConversationNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.exception("Unhandled error patching ai conversation")
+        raise HTTPException(status_code=500, detail="Internal server error") from exc
+
+
 @app.post("/conversation")
 def conversation(request: ConversationRequest) -> dict[str, Any]:
-    # #region agent log
-    import json, time
-    try:
-        with open("/Users/tadasuke/Documents/19_cursor/04_reticle/.cursor/debug-3adb99.log", "a") as f:
-            f.write(json.dumps({"sessionId":"3adb99","location":"local_server.py:conversation","message":"conversation request received","data":{"type":request.type,"friendType":request.friendType,"buddyType":request.buddyType,"conversationMode":request.conversationMode},"timestamp":int(time.time()*1000),"hypothesisId":"H1"}) + "\n")
-    except OSError:
-        pass
-    # #endregion
     if request.conversationMode == "ai":
         if not request.friendType:
             raise HTTPException(status_code=400, detail="friendType is required for AI mode")
         valid_friend = is_valid_friend_type(request.friendType)
-        # #region agent log
-        try:
-            with open("/Users/tadasuke/Documents/19_cursor/04_reticle/.cursor/debug-3adb99.log", "a") as f:
-                f.write(json.dumps({"sessionId":"3adb99","location":"local_server.py:conversation","message":"friendType validation","data":{"friendType":request.friendType,"validFriend":valid_friend},"timestamp":int(time.time()*1000),"hypothesisId":"H5","runId":"post-fix"}) + "\n")
-        except OSError:
-            pass
-        # #endregion
         if not valid_friend:
             raise HTTPException(status_code=400, detail=f"Unknown friendType: {request.friendType}")
     if not is_valid_buddy_type(request.buddyType):
@@ -225,7 +371,8 @@ def conversation(request: ConversationRequest) -> dict[str, Any]:
     except RuntimeError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {exc}") from exc
+        logger.exception("Unhandled error in conversation handler")
+        raise HTTPException(status_code=500, detail="Internal server error") from exc
 
 
 @app.get("/real-friends")

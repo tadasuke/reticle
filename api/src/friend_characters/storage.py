@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Any
 
+import shutil
 import yaml
 
 from src.assets_paths import get_friends_root
@@ -212,7 +213,7 @@ def delete_persona(friend_id: str) -> None:
     path = _persona_path(friend_id)
     if not path.exists():
         raise ValueError(f"Friend character not found: {friend_id}")
-    path.unlink()
+    shutil.rmtree(get_friend_dir(friend_id))
 
 
 def persona_to_list_item(spec: FriendPersonaSpec) -> dict[str, Any]:

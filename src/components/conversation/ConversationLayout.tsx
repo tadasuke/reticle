@@ -10,6 +10,9 @@ type ConversationLayoutProps = {
   scenario: Scenario;
   friendType?: FriendType;
   buddyType?: BuddyType;
+  buddyTypes?: BuddyType[];
+  onBuddyTypeChange?: (id: string) => void;
+  buddyTypeChangeDisabled?: boolean;
   supportType: BuddySupportType;
   onSupportTypeChange: (type: BuddySupportType) => void;
   messages: Message[];
@@ -27,6 +30,9 @@ export function ConversationLayout({
   scenario,
   friendType,
   buddyType,
+  buddyTypes,
+  onBuddyTypeChange,
+  buddyTypeChangeDisabled = false,
   supportType,
   onSupportTypeChange,
   messages,
@@ -91,6 +97,9 @@ export function ConversationLayout({
         />
         <BuddyPanel
           buddyType={buddyType}
+          buddyTypes={buddyTypes}
+          onBuddyTypeChange={onBuddyTypeChange}
+          buddyTypeChangeDisabled={buddyTypeChangeDisabled}
           supportType={supportType}
           onSupportTypeChange={onSupportTypeChange}
           messages={messages}

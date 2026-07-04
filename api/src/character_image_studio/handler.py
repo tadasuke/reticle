@@ -63,6 +63,7 @@ def update_spec(
     negative_prompt: str,
 ) -> dict[str, Any]:
     character_id = validate_character_id(character_id)
+    load_spec(character_id)
     if not visual_anchor.strip():
         raise ValueError("visual_anchor is required")
     spec = save_spec(

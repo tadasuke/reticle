@@ -1,4 +1,5 @@
 import json
+import re
 import shutil
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
@@ -13,6 +14,8 @@ from src.assets_paths import get_images_root
 from .specs import DEFAULT_NEGATIVE_PROMPT, CharacterVisualSpec, validate_character_id
 
 ImageKind = Literal["candidate", "stress-test", "reference"]
+
+IMAGE_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]+$")
 
 
 @dataclass
@@ -224,6 +227,8 @@ def get_reference_info(character_id: str) -> dict[str, Any] | None:
 
 def resolve_image_path(character_id: str, image_id: str) -> tuple[Path, ImageKind]:
     char_dir = get_character_dir(character_id)
+    if image_id != "reference" and not IMAGE_ID_PATTERN.match(image_id):
+        raise ValueError(f"Invalid image id: {image_id}")
 
     for subdir, kind in [("candidates", "candidate"), ("stress-test", "stress-test")]:
         path = char_dir / subdir / f"{image_id}.png"

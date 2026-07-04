@@ -1,4 +1,6 @@
 import type { RealFriendInput, RealFriendPhoto } from '../types/realFriend';
+import { useState } from 'react';
+import { ConfirmDialog } from '../components/common/ConfirmDialog';
 import { ErrorBanner } from '../components/common/ErrorBanner';
 import { RealFriendPhotoManager } from './components/RealFriendPhotoManager';
 
@@ -45,6 +47,8 @@ export function RealFriendFormModal({
   onDeletePhoto,
   onDismissPhotoError,
 }: RealFriendFormModalProps) {
+  const [pendingDelete, setPendingDelete] = useState(false);
+
   if (!open) return null;
 
   const isBusy = loadingSave || loadingDelete;
@@ -182,7 +186,7 @@ export function RealFriendFormModal({
             <button
               type="button"
               disabled={isBusy}
-              onClick={onDelete}
+              onClick={() => setPendingDelete(true)}
               className="rounded-lg border border-red-300 px-4 py-2 text-sm text-red-700 hover:bg-red-50 disabled:opacity-50"
             >
               {loadingDelete ? '削除中...' : '削除する'}
@@ -190,6 +194,17 @@ export function RealFriendFormModal({
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={pendingDelete}
+        title="リアルフレンドを削除しますか？"
+        message={`${form.label || 'このフレンド'}を削除します。会話履歴も削除され、元に戻せません。`}
+        onConfirm={() => {
+          onDelete();
+          setPendingDelete(false);
+        }}
+        onCancel={() => setPendingDelete(false)}
+      />
     </div>
   );
 }

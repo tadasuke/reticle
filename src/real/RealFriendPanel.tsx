@@ -9,7 +9,6 @@ import {
 } from 'react';
 import type { Message } from '../types/conversation';
 import type { RealFriendListItem } from '../types/realFriend';
-import { ConfirmDialog } from '../components/common/ConfirmDialog';
 import { RealFriendMessageList } from './RealFriendMessageList';
 import { RealFriendAvatar } from './components/RealFriendAvatar';
 import { RealFriendImageLightbox } from './components/RealFriendImageLightbox';
@@ -144,15 +143,11 @@ export function RealFriendPanel({
   const [partnerDraft, setPartnerDraft] = useState('');
   const [userDraft, setUserDraft] = useState('');
   const [imageExpanded, setImageExpanded] = useState(false);
-  const [pendingDelete, setPendingDelete] = useState(false);
   const partnerInputRef = useRef<HTMLTextAreaElement>(null);
   const userInputRef = useRef<HTMLTextAreaElement>(null);
 
   const isBusy = isLoading || pasteDisabled || !realFriend;
   const inputDisabled = isBusy;
-  const lastFriendMessageId =
-    messages.filter((message) => message.channel === 'friend').at(-1)?.id ?? null;
-  const canDeleteLastMessage = !!lastFriendMessageId && !deleteDisabled;
 
   const handlePartnerSubmit = () => {
     if (!partnerDraft.trim() || inputDisabled) return;
@@ -229,17 +224,6 @@ export function RealFriendPanel({
       />
 
       <div className="shrink-0 border-t border-gray-200 bg-white">
-        {canDeleteLastMessage && (
-          <div className="flex justify-end border-b border-gray-100 px-4 py-2">
-            <button
-              type="button"
-              onClick={() => setPendingDelete(true)}
-              className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100"
-            >
-              最後のメッセージを削除
-            </button>
-          </div>
-        )}
         <p className="border-b border-gray-100 px-4 py-2 text-xs text-gray-500">
           Tinder などからコピーしたテキストを貼り付けてください
         </p>
@@ -271,17 +255,6 @@ export function RealFriendPanel({
           </p>
         )}
       </div>
-
-      <ConfirmDialog
-        open={pendingDelete}
-        title="メッセージを削除しますか？"
-        message="このメッセージを削除します。バディパネルのトークは残ります。"
-        onConfirm={() => {
-          onDeleteLastMessage();
-          setPendingDelete(false);
-        }}
-        onCancel={() => setPendingDelete(false)}
-      />
     </section>
   );
 }

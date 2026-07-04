@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   createFriendCharacter,
   deleteFriendCharacter,
@@ -41,6 +41,11 @@ export function useFriendCharacterAdmin() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [loading, setLoading] = useState<FriendCharacterLoadingState>(initialLoading);
   const [error, setError] = useState<string | null>(null);
+  const selectedIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    selectedIdRef.current = selectedId;
+  }, [selectedId]);
 
   const isBusy = Object.values(loading).some(Boolean);
   const isCreating = showCreateForm;
@@ -53,6 +58,9 @@ export function useFriendCharacterAdmin() {
 
   const loadDetail = useCallback(async (friendId: string) => {
     const data = await fetchFriendCharacterDetail(friendId);
+    if (selectedIdRef.current !== friendId) {
+      return data;
+    }
     setDetail(data);
     setForm({
       id: data.id,
@@ -82,7 +90,7 @@ export function useFriendCharacterAdmin() {
     } catch (e) {
       setError(e instanceof Error ? e.message : '読み込みに失敗しました。');
     } finally {
-      setLoading(initialLoading);
+      setLoading((prev) => ({ ...prev, list: false, detail: false }));
     }
   }, [loadDetail, loadList, selectedId, showCreateForm]);
 

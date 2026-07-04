@@ -58,16 +58,6 @@ type UseRealConversationOptions = {
   onMessagesPersisted?: () => void;
 };
 
-// #region agent log
-function dbgConv(location: string, message: string, data: Record<string, unknown>, hypothesisId: string) {
-  fetch('http://127.0.0.1:7250/ingest/989a1cc2-ba98-4ec6-9f19-23ab7217ba35', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '30c584' },
-    body: JSON.stringify({ sessionId: '30c584', location, message, data, hypothesisId, timestamp: Date.now() }),
-  }).catch(() => {});
-}
-// #endregion
-
 export function useRealConversation(options: UseRealConversationOptions = {}) {
   const [realFriend, setRealFriend] = useState<RealFriendListItem | null>(null);
   const [buddyTypeId, setBuddyTypeId] = useState<BuddyTypeId>('');
@@ -151,12 +141,6 @@ export function useRealConversation(options: UseRealConversationOptions = {}) {
         const result = await sendRealTranslation(friendId, englishText, DEFAULT_AI_MODEL);
         const active = isActiveConversation(friendId, runId);
         if (!active) {
-          // #region agent log
-          dbgConv('useRealConversation:attachTranslation:blocked', 'stale translation blocked', {
-            friendId, runId, currentRunId: backfillRunIdRef.current,
-            currentRealFriendId: realFriendRef.current?.id ?? null,
-          }, 'B');
-          // #endregion
           return;
         }
 
@@ -165,11 +149,6 @@ export function useRealConversation(options: UseRealConversationOptions = {}) {
         );
         messagesRef.current = updated;
         setMessages(updated);
-        // #region agent log
-        dbgConv('useRealConversation:attachTranslation:apply', 'setMessages from translation', {
-          friendId, runId, messageCount: updated.length,
-        }, 'B');
-        // #endregion
         await persistMessages(updated, friendId, options);
       } catch (e) {
         if (!isActiveConversation(friendId, runId)) return;
@@ -248,15 +227,6 @@ export function useRealConversation(options: UseRealConversationOptions = {}) {
       const runId = backfillRunIdRef.current;
       const friendId = friend.id;
 
-      // #region agent log
-      dbgConv('useRealConversation:switchConversation:start', 'switch start', {
-        friendId,
-        friendLabel: friend.label,
-        runId,
-        prevRealFriendId: realFriendRef.current?.id ?? null,
-      }, 'D');
-      // #endregion
-
       setRealFriend(friend);
       realFriendRef.current = friend;
       setBuddyTypeIdSynced(nextBuddyTypeId);
@@ -269,18 +239,6 @@ export function useRealConversation(options: UseRealConversationOptions = {}) {
       try {
         const savedMessages = await fetchRealFriendMessages(friendId);
         const active = isActiveConversation(friendId, runId);
-        // #region agent log
-        dbgConv('useRealConversation:switchConversation:fetchDone', 'fetch completed', {
-          friendId,
-          friendLabel: friend.label,
-          runId,
-          active,
-          currentRunId: backfillRunIdRef.current,
-          currentRealFriendId: realFriendRef.current?.id ?? null,
-          messageCount: savedMessages.length,
-          willApply: active,
-        }, 'D');
-        // #endregion
         if (!active) return;
         messagesRef.current = savedMessages;
         setMessages(savedMessages);
@@ -408,11 +366,6 @@ export function useRealConversation(options: UseRealConversationOptions = {}) {
         updateTranslatingIds(message.id, false);
         if (realFriendRef.current?.id === friendId) {
           const errMsg = e instanceof Error ? e.message : 'メッセージの保存に失敗しました。';
-          // #region agent log
-          dbgConv('useRealConversation:pasteFriendMessage:error', 'paste failed', {
-            friendId, speaker, errMsg,
-          }, 'A');
-          // #endregion
           setError(errMsg);
         }
       } finally {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   deleteRealFriendPhoto,
   fetchRealFriendPhotos,
@@ -17,23 +17,35 @@ export function useRealFriendPhotos({ friendId, enabled, onChanged }: UseRealFri
   const [photos, setPhotos] = useState<RealFriendPhoto[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const friendIdRef = useRef(friendId);
+
+  useEffect(() => {
+    friendIdRef.current = friendId;
+  }, [friendId]);
 
   const loadPhotos = useCallback(async () => {
     if (!friendId) {
       setPhotos([]);
       return;
     }
+    const requestedId = friendId;
 
     setLoading(true);
     setError(null);
     try {
       const items = await fetchRealFriendPhotos(friendId);
-      setPhotos(items);
+      if (friendIdRef.current === requestedId) {
+        setPhotos(items);
+      }
     } catch (e) {
-      setError(e instanceof Error ? e.message : '画像一覧の取得に失敗しました。');
-      setPhotos([]);
+      if (friendIdRef.current === requestedId) {
+        setError(e instanceof Error ? e.message : '画像一覧の取得に失敗しました。');
+        setPhotos([]);
+      }
     } finally {
-      setLoading(false);
+      if (friendIdRef.current === requestedId) {
+        setLoading(false);
+      }
     }
   }, [friendId]);
 

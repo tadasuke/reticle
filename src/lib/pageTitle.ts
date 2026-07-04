@@ -5,11 +5,8 @@ export function setPageTitle(pageName?: string): void {
 }
 
 export function resolveAppPageTitle(pathname: string): string | undefined {
-  if (pathname === '/' || pathname === '') {
-    return 'モード選択';
-  }
-  if (pathname.startsWith('/ai')) {
-    return 'AIモード';
+  if (pathname === '/' || pathname === '' || pathname.startsWith('/ai')) {
+    return 'AIトップ画面';
   }
   if (pathname.startsWith('/real')) {
     return 'リアルモード';

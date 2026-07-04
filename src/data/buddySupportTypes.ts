@@ -31,5 +31,5 @@ export const BUDDY_SUPPORT_TYPES: BuddySupportTypeOption[] = [
 export const DEFAULT_BUDDY_SUPPORT_TYPE: BuddySupportType = 'middle';
 
 export function getBuddySupportTypeOption(id: BuddySupportType): BuddySupportTypeOption {
-  return BUDDY_SUPPORT_TYPES.find((option) => option.id === id) ?? BUDDY_SUPPORT_TYPES[1];
+  return BUDDY_SUPPORT_TYPES.find((option) => option.id === id) ?? BUDDY_SUPPORT_TYPES[0];
 }

@@ -16,5 +16,12 @@ export default defineConfig({
     watch: {
       ignored: API_WRITTEN_ASSETS,
     },
+    proxy: {
+      '/debug-ingest': {
+        target: 'http://127.0.0.1:7250/ingest/989a1cc2-ba98-4ec6-9f19-23ab7217ba35',
+        changeOrigin: true,
+        rewrite: () => '',
+      },
+    },
   },
 });

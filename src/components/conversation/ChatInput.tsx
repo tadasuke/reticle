@@ -1,5 +1,4 @@
 import {
-  forwardRef,
   useRef,
   useState,
   type CompositionEvent,
@@ -13,13 +12,18 @@ type ChatInputProps = {
   onSend: (content: string) => void;
   disabled?: boolean;
   buttonLabel?: string;
+  inputRef?: RefObject<HTMLTextAreaElement | null>;
   peerInputRef?: RefObject<HTMLTextAreaElement | null>;
 };
 
-export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(function ChatInput(
-  { placeholder, onSend, disabled = false, buttonLabel = '送信', peerInputRef },
-  ref,
-) {
+export function ChatInput({
+  placeholder,
+  onSend,
+  disabled = false,
+  buttonLabel = '送信',
+  inputRef,
+  peerInputRef,
+}: ChatInputProps) {
   const [value, setValue] = useState('');
   const isComposingRef = useRef(false);
 
@@ -46,9 +50,25 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(functio
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Tab' && peerInputRef) {
+    if (e.key === 'Tab') {
+      // #region agent log
+      fetch('/debug-ingest',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'cbb04b'},body:JSON.stringify({sessionId:'cbb04b',location:'ChatInput.tsx:handleKeyDown',message:'Tab keydown',data:{placeholder,shiftKey:e.shiftKey,hasPeerInputRef:!!peerInputRef,peerCurrent:!!peerInputRef?.current,peerDisabled:peerInputRef?.current?.disabled,peerReadOnly:peerInputRef?.current?.readOnly,isComposingRef:isComposingRef.current,nativeIsComposing:e.nativeEvent.isComposing,activePlaceholder:(document.activeElement as HTMLTextAreaElement|null)?.placeholder},timestamp:Date.now(),hypothesisId:'H1-H4'})}).catch(()=>{});
+      // #endregion
+    }
+
+    if (e.key === 'Tab' && !e.shiftKey && peerInputRef) {
+      if (isComposingRef.current || e.nativeEvent.isComposing) {
+        // #region agent log
+        fetch('/debug-ingest',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'cbb04b'},body:JSON.stringify({sessionId:'cbb04b',location:'ChatInput.tsx:ime-block',message:'Tab blocked by IME guard',data:{placeholder,isComposingRef:isComposingRef.current,nativeIsComposing:e.nativeEvent.isComposing},timestamp:Date.now(),hypothesisId:'H2'})}).catch(()=>{});
+        // #endregion
+        return;
+      }
       e.preventDefault();
+      e.stopPropagation();
       peerInputRef.current?.focus();
+      // #region agent log
+      fetch('/debug-ingest',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'cbb04b'},body:JSON.stringify({sessionId:'cbb04b',location:'ChatInput.tsx:after-focus',message:'Tab focus attempted',data:{placeholder,peerCurrent:!!peerInputRef.current,activeAfter:(document.activeElement as HTMLTextAreaElement|null)?.placeholder,activeTag:document.activeElement?.tagName},timestamp:Date.now(),hypothesisId:'H3-H4'})}).catch(()=>{});
+      // #endregion
       return;
     }
 
@@ -64,16 +84,19 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(functio
   return (
     <form onSubmit={handleSubmit} className="flex gap-2 border-t border-gray-200 bg-white p-3">
       <textarea
-        ref={ref}
+        ref={inputRef}
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onCompositionStart={handleCompositionStart}
         onCompositionEnd={handleCompositionEnd}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
-        disabled={disabled}
+        readOnly={disabled}
+        aria-disabled={disabled}
         rows={2}
-        className="flex-1 resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 disabled:bg-gray-50"
+        className={`flex-1 resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 ${
+          disabled ? 'cursor-not-allowed bg-gray-50' : ''
+        }`}
       />
       <button
         type="submit"
@@ -84,4 +107,4 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(functio
       </button>
     </form>
   );
-});
+}

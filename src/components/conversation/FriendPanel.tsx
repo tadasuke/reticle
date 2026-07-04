@@ -45,6 +45,9 @@ export function FriendPanel({
 
   useEffect(() => {
     if (!isBusy && lastFriendReplyId) {
+      // #region agent log
+      fetch('/debug-ingest',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'cbb04b'},body:JSON.stringify({sessionId:'cbb04b',location:'FriendPanel.tsx:auto-focus',message:'FriendPanel auto-focus effect',data:{isBusy,lastFriendReplyId,activeBefore:(document.activeElement as HTMLTextAreaElement|null)?.placeholder},timestamp:Date.now(),hypothesisId:'H5'})}).catch(()=>{});
+      // #endregion
       inputRef.current?.focus();
     }
   }, [isBusy, lastFriendReplyId]);
@@ -92,7 +95,7 @@ export function FriendPanel({
 
       <div className="shrink-0">
         <ChatInput
-          ref={inputRef}
+          inputRef={inputRef}
           peerInputRef={peerInputRef}
           placeholder="Type your reply in English..."
           onSend={onSend}

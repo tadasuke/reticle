@@ -29,6 +29,7 @@ export function RealFriendMessageList({
   const [pendingDelete, setPendingDelete] = useState(false);
   const filtered = messages.filter((message) => message.channel === 'friend');
   const lastFriendMessageId = useMemo(() => filtered.at(-1)?.id ?? null, [filtered]);
+  const deleteTargetId = deletableMessageId ?? lastFriendMessageId;
 
   useEffect(() => {
     const container = containerRef.current;
@@ -74,7 +75,7 @@ export function RealFriendMessageList({
             {message.translationJa && (
               <p className="max-w-full text-xs leading-relaxed text-gray-500">{message.translationJa}</p>
             )}
-            {lastFriendMessageId === message.id && (
+            {deleteTargetId === message.id && (
               <button
                 type="button"
                 onClick={() => setPendingDelete(true)}

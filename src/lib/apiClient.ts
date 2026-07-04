@@ -33,6 +33,8 @@ type ConversationRequest =
       englishText: string;
     });
 
+const REQUEST_TIMEOUT_MS = 120_000;
+
 function getApiBaseUrl(): string {
   const baseUrl = import.meta.env.VITE_API_BASE_URL;
   if (!baseUrl) {
@@ -49,29 +51,41 @@ export function getMediaUrl(urlPath: string): string {
 }
 
 async function postConversation(body: ConversationRequest): Promise<ConversationResponse> {
-  // #region agent log
-  fetch('http://127.0.0.1:7250/ingest/989a1cc2-ba98-4ec6-9f19-23ab7217ba35',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3adb99'},body:JSON.stringify({sessionId:'3adb99',location:'apiClient.ts:postConversation',message:'conversation request body',data:{type:body.type,friendType:'friendType' in body ? body.friendType : null,buddyType:'buddyType' in body ? body.buddyType : null,hasLisaType:Object.prototype.hasOwnProperty.call(body,'lisaType')},timestamp:Date.now(),hypothesisId:'H2'})}).catch(()=>{});
-  // #endregion
-  const response = await fetch(`${getApiBaseUrl()}/conversation`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
-  const data = (await response.json()) as ConversationResponse & { error?: string; detail?: string };
+  try {
+    const response = await fetch(`${getApiBaseUrl()}/conversation`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
 
-  if (!response.ok) {
-    // #region agent log
-    fetch('http://127.0.0.1:7250/ingest/989a1cc2-ba98-4ec6-9f19-23ab7217ba35',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3adb99'},body:JSON.stringify({sessionId:'3adb99',location:'apiClient.ts:postConversation',message:'conversation error response',data:{status:response.status,detail:data.error ?? data.detail ?? null},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
-    // #endregion
-    throw new Error(data.error ?? data.detail ?? 'API リクエストに失敗しました。');
+    let data: ConversationResponse & { error?: string; detail?: string };
+    try {
+      data = (await response.json()) as ConversationResponse & { error?: string; detail?: string };
+    } catch {
+      throw new Error('API から不正なレスポンスが返されました。');
+    }
+
+    if (!response.ok) {
+      throw new Error(data.error ?? data.detail ?? 'API リクエストに失敗しました。');
+    }
+
+    if (!data.text || !data.usage) {
+      throw new Error('API からテキスト応答が返されませんでした。');
+    }
+
+    return { text: data.text, usage: data.usage };
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('リクエストがタイムアウトしました。');
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  if (!data.text || !data.usage) {
-    throw new Error('API からテキスト応答が返されませんでした。');
-  }
-
-  return { text: data.text, usage: data.usage };
 }
 
 export async function fetchFriendTypes(): Promise<FriendType[]> {

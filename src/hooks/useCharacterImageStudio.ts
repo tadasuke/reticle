@@ -63,7 +63,10 @@ export function useCharacterImageStudio() {
       if (prev && data.gallery.some((img) => img.id === prev)) {
         return prev;
       }
-      return data.gallery[0]?.id ?? null;
+      if (prev && data.reference?.id === prev) {
+        return prev;
+      }
+      return data.gallery[0]?.id ?? data.reference?.id ?? null;
     });
     return data;
   }, []);
