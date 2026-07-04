@@ -13,5 +13,9 @@ api/.venv
 .DS_Store
 *.log
 
+# Python
+__pycache__/
+*.py[cod]
+
 # TypeScript
 *.tsbuildinfo

@@ -1,0 +1,17 @@
+version = 0.1
+
+[default.deploy.parameters]
+stack_name = "buddy-talk-staging"
+resolve_s3 = true
+s3_prefix = "buddy-talk-staging"
+region = "ap-northeast-1"
+confirm_changeset = false
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "StageName=staging MediaBucketName=reticle-staging-media"
+
+[default.global.parameters]
+region = "ap-northeast-1"
+
+[default.build.parameters]
+cached = true
+parallel = true

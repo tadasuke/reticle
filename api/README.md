@@ -110,11 +110,23 @@ Static files: `GET /media/friends/*`, `GET /media/buddies/*`, `GET /media/images
 
 ## Lambda
 
-Entry point: `src.handler.lambda_handler`
+Entry point: `src.handler.lambda_handler`（ルーティングは `src.http_router`）
 
-Deploy to API Gateway (HTTP API) with proxy integration. Set `DASHSCOPE_API_KEY` as a Lambda environment variable.
+SAM デプロイ: リポジトリルートの `template.yaml` + `sam build` / `sam deploy`。
 
-**Note:** Lambda currently handles `POST /conversation` only. User / AI conversation endpoints are implemented in `local_server.py` and require API Gateway route expansion for staging/product.
+staging でルーティングする AIモード API:
+
+| Method | Path |
+|--------|------|
+| POST | `/users/login` |
+| GET/POST | `/users/{userId}/ai-conversations` |
+| GET/PUT/PATCH | `/users/{userId}/ai-conversations/{convId}` |
+| PUT | `/users/{userId}/ai-conversations/{convId}/messages` |
+| POST | `/conversation` |
+| GET | `/friend-types`, `/buddy-types` |
+| GET | `/media/friends/*`, `/media/buddies/*` |
+
+`DASHSCOPE_API_KEY` は Secrets Manager `reticle/staging/dashscope` から SAM 経由で注入。メディア画像は `MEDIA_BUCKET`（staging: `reticle-staging-media`）から配信。
 
 ## DynamoDB
 

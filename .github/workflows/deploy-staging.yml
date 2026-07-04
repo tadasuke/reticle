@@ -1,0 +1,95 @@
+name: Deploy staging
+
+on:
+  push:
+    branches:
+      - staging
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  SAM_STACK_NAME: ${{ vars.SAM_STACK_NAME }}
+  SAM_ARTIFACT_BUCKET: ${{ vars.SAM_ARTIFACT_BUCKET }}
+  FRONTEND_BUCKET: ${{ vars.FRONTEND_BUCKET }}
+  CLOUDFRONT_DISTRIBUTION_ID: ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}
+
+jobs:
+  deploy-api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: aws-actions/setup-sam@v2
+
+      - name: SAM build
+        run: sam build
+
+      - name: SAM deploy
+        run: |
+          sam deploy \
+            --stack-name "${SAM_STACK_NAME}" \
+            --s3-bucket "${SAM_ARTIFACT_BUCKET}" \
+            --capabilities CAPABILITY_IAM \
+            --no-confirm-changeset \
+            --no-fail-on-empty-changeset \
+            --parameter-overrides StageName=staging MediaBucketName=${{ vars.MEDIA_BUCKET }}
+
+      - name: Export API URL
+        id: api
+        run: |
+          API_URL=$(aws cloudformation describe-stacks \
+            --stack-name "${SAM_STACK_NAME}" \
+            --query "Stacks[0].Outputs[?OutputKey=='ApiEndpoint'].OutputValue" \
+            --output text)
+          echo "url=${API_URL}" >> "$GITHUB_OUTPUT"
+
+      - name: Sync media assets to S3
+        run: |
+          aws s3 sync assets/friends "s3://${{ vars.MEDIA_BUCKET }}/friends" \
+            --exclude "*" --include "*/persona.yaml" --include "*/reference.png"
+          aws s3 sync assets/buddies "s3://${{ vars.MEDIA_BUCKET }}/buddies" \
+            --exclude "*" --include "*/persona.yaml" --include "*/reference.png"
+
+    outputs:
+      api_url: ${{ steps.api.outputs.url }}
+
+  deploy-frontend:
+    needs: deploy-api
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Build frontend
+        env:
+          VITE_API_BASE_URL: ${{ needs.deploy-api.outputs.api_url }}
+        run: |
+          npm ci
+          npm run build
+
+      - name: Deploy to S3
+        run: aws s3 sync dist/ "s3://${FRONTEND_BUCKET}/" --delete
+
+      - name: Invalidate CloudFront cache
+        if: env.CLOUDFRONT_DISTRIBUTION_ID != ''
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "${CLOUDFRONT_DISTRIBUTION_ID}" \
+            --paths "/*"

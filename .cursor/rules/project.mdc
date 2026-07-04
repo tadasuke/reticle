@@ -115,7 +115,7 @@ alwaysApply: true
 | `USER#{userId}` | `PROFILE` | ユーザプロフィール |
 | `USER#{userId}` | `CONV#{conversationId}` | AI会話メタ + `messages[]` |
 
-develop: DynamoDB Local（`docker-compose` + `:8001`）。staging/product: AWS DynamoDB（IaC は未整備、手動テーブル作成）。
+develop: DynamoDB Local（`docker-compose` + `:8001`）。staging: SAM（`buddy-talk-staging` テーブル）。product: AWS DynamoDB（IaC 未整備）。
 
 ## リアルモード会話フロー（隠し機能）
 
@@ -272,6 +272,17 @@ assets/
 - **API**: API Gateway → Lambda
 - **DB**: DynamoDB（フルマネージド）
 
+#### staging デプロイ（GitHub Actions）
+
+- **トリガー**: `staging` ブランチへの push（`develop` → `staging` マージ）
+- **ワークフロー**: [`.github/workflows/deploy-staging.yml`](../.github/workflows/deploy-staging.yml)
+- **IaC**: ルートの [`template.yaml`](../template.yaml)（SAM）で API Gateway + Lambda + DynamoDB
+- **認証**: GitHub OIDC → IAM ロール `GithubActionsReticle`
+- **S3 バケット**: `reticle-staging-sam-artifacts`（SAM）, `reticle-staging-web`（フロント）, `reticle-staging-media`（キャラ画像・persona）
+- **シークレット**: Secrets Manager `reticle/staging/dashscope`（`api_key`）
+- **フロント URL**: CloudFront `d16xi94wq5cc02.cloudfront.net`（distribution `E3SF0HN8CGMN9E`）
+- **DynamoDB テーブル名（staging）**: `buddy-talk-staging`（SAM スタック `buddy-talk-staging`）
+
 ### AWS 接続（開発・運用）
 
 - AWS との接続には、**AWS の公式 MCP サーバ**を使う
@@ -414,7 +425,7 @@ npm run dev
 - 音声入力（マイクボタン）
 - 音声出力（AI フレンド返答の自動読み上げ）
 - シナリオの追加
-- staging/product 向け users / ai-conversations API の Lambda ルーティング・IaC
+- staging/product 向け users / ai-conversations API の Lambda ルーティング（staging は SAM デプロイ済み）
 
 ## Notion（仕様の正本）
 

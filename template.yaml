@@ -1,0 +1,110 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Buddy Talk staging API
+
+Parameters:
+  StageName:
+    Type: String
+    Default: staging
+  MediaBucketName:
+    Type: String
+    Default: reticle-staging-media
+  DashscopeSecretName:
+    Type: String
+    Default: reticle/staging/dashscope
+  AllowedOrigins:
+    Type: String
+    Default: "*"
+
+Globals:
+  Function:
+    Timeout: 120
+    MemorySize: 512
+    Runtime: python3.12
+    Architectures:
+      - x86_64
+
+Resources:
+  BuddyTalkTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub buddy-talk-${StageName}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+
+  BuddyTalkApi:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      FunctionName: !Sub buddy-talk-api-${StageName}
+      Handler: src.handler.lambda_handler
+      CodeUri: api/
+      Description: Buddy Talk API for staging
+      Environment:
+        Variables:
+          DYNAMODB_TABLE_NAME: !Ref BuddyTalkTable
+          MEDIA_BUCKET: !Ref MediaBucketName
+          FRIEND_ASSETS_DIR: assets/friends
+          BUDDY_ASSETS_DIR: assets/buddies
+          QWEN_BASE_URL: https://dashscope-intl.aliyuncs.com/compatible-mode/v1
+          QWEN_MODEL: qwen-plus
+          ALLOWED_ORIGINS: !Ref AllowedOrigins
+          DASHSCOPE_API_KEY: !Sub "{{resolve:secretsmanager:${DashscopeSecretName}:SecretString:api_key}}"
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref BuddyTalkTable
+        - S3ReadPolicy:
+            BucketName: !Ref MediaBucketName
+        - Statement:
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${DashscopeSecretName}*
+      Events:
+        HttpApi:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref BuddyTalkHttpApi
+            Path: /{proxy+}
+            Method: ANY
+        HttpApiRoot:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref BuddyTalkHttpApi
+            Path: /
+            Method: ANY
+
+  BuddyTalkHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: !Ref StageName
+      CorsConfiguration:
+        AllowOrigins:
+          - "*"
+        AllowHeaders:
+          - Content-Type
+          - X-User-Id
+        AllowMethods:
+          - GET
+          - POST
+          - PUT
+          - PATCH
+          - OPTIONS
+
+Outputs:
+  ApiEndpoint:
+    Description: API Gateway endpoint URL
+    Value: !Sub https://${BuddyTalkHttpApi}.execute-api.${AWS::Region}.amazonaws.com/${StageName}
+  DynamoDBTableName:
+    Description: DynamoDB table name
+    Value: !Ref BuddyTalkTable
