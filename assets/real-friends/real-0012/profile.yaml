@@ -1,0 +1,16 @@
+id: real-0012
+label: Heyy
+age: 25
+nationality: ''
+gender: ''
+sourceApp: Tinder
+bio: ''
+notes: ''
+createdAt: '2026-06-27T12:49:06+00:00'
+updatedAt: '2026-06-29T04:54:52+00:00'
+lastInteractionAt: '2026-06-29T04:54:49+00:00'
+photos:
+- id: photo-0001
+  filename: photo-0001.png
+  createdAt: '2026-06-28T10:07:44+00:00'
+defaultPhotoId: photo-0001

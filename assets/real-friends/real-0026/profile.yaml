@@ -1,0 +1,16 @@
+id: real-0026
+label: Nn
+age: 23
+nationality: ''
+gender: ''
+sourceApp: Tinder
+bio: ''
+notes: ''
+createdAt: '2026-06-28T10:13:21+00:00'
+updatedAt: '2026-06-28T10:14:48+00:00'
+lastInteractionAt: '2026-06-28T10:14:47+00:00'
+photos:
+- id: photo-0001
+  filename: photo-0001.png
+  createdAt: '2026-06-28T10:13:43+00:00'
+defaultPhotoId: photo-0001

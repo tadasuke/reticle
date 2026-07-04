@@ -1,0 +1,9 @@
+id: img-0002
+label: img-0002
+visual_anchor: A bust-up portrait photo of a young Vietnamese woman, 24 years old,
+  petite and short stature, with a round baby face and large expressive eyes, short
+  black hair, feminine figure. Natural smile, soft lighting. High quality, realistic,
+  clean background.
+must_avoid: ''
+negative_prompt: cartoon, anime, illustration, drawing, ugly, deformed, blurry, low
+  quality, watermark, text, logo

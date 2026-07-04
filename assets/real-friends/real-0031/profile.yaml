@@ -1,0 +1,16 @@
+id: real-0031
+label: Almy
+age: 23
+nationality: ''
+gender: ''
+sourceApp: Tinder
+bio: ''
+notes: ''
+createdAt: '2026-06-28T10:26:55+00:00'
+updatedAt: '2026-06-28T10:27:55+00:00'
+lastInteractionAt: '2026-06-28T10:27:54+00:00'
+photos:
+- id: photo-0001
+  filename: photo-0001.png
+  createdAt: '2026-06-28T10:27:02+00:00'
+defaultPhotoId: photo-0001

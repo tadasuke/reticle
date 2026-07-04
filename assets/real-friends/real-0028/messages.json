@@ -1,0 +1,84 @@
+{
+  "messages": [
+    {
+      "id": "c244a393-f385-4c26-8e56-4906871b6b54",
+      "speaker": "user",
+      "channel": "friend",
+      "content": "Hi! Nice to meet you!!",
+      "timestamp": 1782641926751,
+      "translationJa": "こんにちは！はじめまして！！",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "bb11c4c3-b6c5-40f1-bb0d-6a8f6e9312d8",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "いいね！「Nice to meet you!」はとても自然な挨拶です。  \n「Hi!」と合わせて使うときは、感嘆符は1つで十分なので、「Hi! Nice to meet you!」がちょっとより自然ですよ。",
+      "timestamp": 1782641928399,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "f98e50fa-c3bf-40cb-93dd-d47ab5acd934",
+      "speaker": "friend",
+      "channel": "friend",
+      "content": "Hi nice to meet u too",
+      "timestamp": 1782641930410,
+      "translationJa": "こんにちは。こちらこそ、はじめまして！",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "008887d6-4936-4310-9467-4277bc213db4",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "ミラさんが「こんにちは！あなたにも会えて嬉しいです！」と返してくれました。  \n丁寧でフレンドリーな返事なので、それに合わせて軽やかに返しましょう。\n\n【おすすめ返信】\n英: Hi Mila! So glad to meet you too — hope we have a great chat! 😊  \n日: ミラさん、こんにちは！私も会えて本当に嬉しいです——楽しいお話しをしましょうね！😊",
+      "timestamp": 1782641932457,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "22fb6cc9-6e75-4dbe-87ed-a041e18aa076",
+      "speaker": "user",
+      "channel": "friend",
+      "content": "Hi Mila!",
+      "timestamp": 1782641944754,
+      "translationJa": "こんにちは、ミラさん！",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "2ae64beb-c997-47be-a263-9a443863bfdd",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "「Hi Mila!」はとても自然で、名前を呼んで親しみやすさも伝わります！  \nもう一言添えると、会話がスムーズに続くので、「Hi Mila! 😊」や「Hi Mila — nice to meet you!」などもおすすめです。",
+      "timestamp": 1782641946532,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "528ca9d3-bac6-4a51-8ef2-06129877cb17",
+      "speaker": "user",
+      "channel": "friend",
+      "content": "I'm from Yokohama, Japan. How about you?",
+      "timestamp": 1782641961285,
+      "translationJa": "私は日本・横浜出身です。あなたは？",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "7a33ae2a-d246-4acd-9168-ba4a8459b913",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "とても自然な自己紹介です！「I'm from Yokohama, Japan.」は完璧。  \n「How about you?」も丁寧で会話を促すのにぴったり——ネイティブがよく使う表現ですよ。",
+      "timestamp": 1782641962756,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    }
+  ]
+}

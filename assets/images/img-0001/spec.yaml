@@ -1,0 +1,9 @@
+id: img-0001
+label: img-0001
+visual_anchor: "A photorealistic portrait of a 21-year-old British woman, \nshort\
+  \ black hair, warm friendly smile, \nnatural makeup, casual and approachable look,\
+  \ \nsoft natural lighting, shallow depth of field, \nsocial media profile picture\
+  \ style, \nsquare crop, upper body shot, \nhigh quality, 8K resolution"
+must_avoid: ''
+negative_prompt: cartoon, anime, illustration, drawing, ugly, deformed, blurry, low
+  quality, watermark, text, logo

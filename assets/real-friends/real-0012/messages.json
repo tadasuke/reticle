@@ -1,0 +1,274 @@
+{
+  "messages": [
+    {
+      "id": "1db73a36-4bc3-4cfe-93fb-7781dd13ae8f",
+      "speaker": "user",
+      "channel": "friend",
+      "content": "Hi! Nice to meet you!!",
+      "timestamp": 1782564550490,
+      "translationJa": "こんにちは！はじめまして！！",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "e492227b-c979-4244-ae98-b4b1a3d54767",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "いいね！「Nice to meet you!」は完璧な挨拶です✨  \n「Hi!」と合わせて使うと、明るくて親しみやすい印象になりますよ。",
+      "timestamp": 1782564551977,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "49ba9811-4a81-4624-b8e3-adbb6fe443b2",
+      "speaker": "friend",
+      "channel": "friend",
+      "content": "Nice to meet you",
+      "timestamp": 1782564553956,
+      "translationJa": "はじめまして！",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "300aa7bc-3559-4628-89a9-b9268fdf4f65",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "相手が「Nice to meet you（はじめまして）」と挨拶してくれました！  \n丁寧でフレンドリーな初対面の返事です。  \n\n【おすすめ返信】  \n英: Nice to meet you too! 😊  \n日: こちらこそ、はじめまして！😊",
+      "timestamp": 1782564555689,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "a2c0cdcc-ed57-43c4-90a7-8461a7557ee2",
+      "speaker": "user",
+      "channel": "friend",
+      "content": "Thank you for message!",
+      "timestamp": 1782564610021,
+      "translationJa": "メッセージありがとう！",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "612cbc8e-ec4a-4c3f-ae42-77fbbb9aa0e0",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "「Thank you for message!」は少し不自然です。  \n自然なのは → **\"Thank you for your message!\"** または **\"Thanks for your message!\"** ✅  \n（「your」を入れると、丁寧で正確になります）",
+      "timestamp": 1782564611967,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "a08fd0f3-e3a2-40a4-9e90-1862deb713af",
+      "speaker": "user",
+      "channel": "friend",
+      "content": "I'm from Yokohama, Japan. How about you?",
+      "timestamp": 1782564623054,
+      "translationJa": "私は日本・横浜出身です。あなたは？",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "a3668235-9239-41ec-8ee9-30d7bb5ad7d7",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "とても自然でいいメッセージです！✨  \n「I'm from Yokohama, Japan.」は完璧。  \n「How about you?」も、相手に話題を振るのにぴったりのフレーズです。",
+      "timestamp": 1782564624568,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "3bd33968-89e0-4e11-821d-a7fcfa8d97a2",
+      "speaker": "friend",
+      "channel": "friend",
+      "content": "Live in Cikarang",
+      "timestamp": 1782564628020,
+      "translationJa": "チカランに住んでいます。",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "6a183a90-9401-479c-ae24-1ebccbe480f3",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "相手は「Cikarang（チカラン）に住んでいます」と教えてくれました（インドネシアの都市です）。  \n軽く共感＋質問で会話を続けましょう！  \n\n【おすすめ返信】  \n英: Oh, Cikarang! I’ve heard it’s a lively area — what do you like most about living there?  \n日: あ、チカランですね！活気のある地域だと聞いたことがあります——そこに住んでいて、一番好きなところは何ですか？",
+      "timestamp": 1782564630631,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "939c3339-ae7e-4615-875d-73bd523f60ac",
+      "speaker": "user",
+      "channel": "buddy",
+      "content": "チカランて、ジャカルタの近くだよね？",
+      "timestamp": 1782569347881,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "ed9c2b26-a54c-4d0f-876a-1a946dc6d21b",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "はい、チカランはジャカルタの東隣にある都市です！  \n英語で言うと：**\"Cikarang is near Jakarta, right?\"** が自然です。  \n※「〜だよね？」は、このように **\"…, right?\"** で気軽に確認できますよ。",
+      "timestamp": 1782569350110,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "55f3110e-5722-40d0-90c6-81d9d1558d86",
+      "speaker": "user",
+      "channel": "buddy",
+      "content": "どんなところ？",
+      "timestamp": 1782569375526,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "190a37b6-a8c6-47ed-9bf9-afd6c9b3a2ae",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "「どんなところ？」は、英語で **\"What’s it like?\"** が一番自然です。  \n会話の流れに合わせて、こう言えます：  \n・**\"What’s Cikarang like?\"**（チカランってどんなところ？）  \n・**\"What’s it like living there?\"**（そこに住むのはどんな感じ？）  \n\n【おすすめ返信】  \n英: What’s Cikarang like?  \n日: チカランってどんなところですか？",
+      "timestamp": 1782569378481,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "bf0c99a7-7b99-47c0-a1b8-a9fc7b7ec95c",
+      "speaker": "user",
+      "channel": "friend",
+      "content": "Cikarang is near Jakarta, right?",
+      "timestamp": 1782641282239,
+      "translationJa": "チカランはジャカルタの近くですか？",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "08a9b065-b9bf-427d-8dc4-626705829aae",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "完璧です！✨  \n「Cikarang is near Jakarta, right?」は、自然で丁寧な確認の言い方です。  \n語順・冠詞・疑問のニュアンスもすべて正確です。",
+      "timestamp": 1782641283809,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "28741521-f29a-4419-b7ee-ad8b95ca724b",
+      "speaker": "user",
+      "channel": "friend",
+      "content": "What's it like?",
+      "timestamp": 1782641286696,
+      "translationJa": "どんな感じ？",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "0303429d-8ec6-4397-94aa-f7f1e190d8a8",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "「What’s it like?」はとても自然で、会話でもよく使われるシンプルな質問です！✨  \n特に「it」が前に出た「Cikarang」を指していると明確なので、文法も完璧です。",
+      "timestamp": 1782641288233,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "f90afddb-ac20-4e89-9fe9-cd207b6f085a",
+      "speaker": "friend",
+      "channel": "friend",
+      "content": "Lumayan",
+      "timestamp": 1782641290400,
+      "translationJa": "まあまあです。",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "792a562a-617a-4791-9369-9c1860cd5101",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "「Lumayan」はインドネシア語で、「まあまあ」「そこそこ」というニュアンスです（例：「普通にいいよ」「悪くないよ」）。  \n日本語だと「まぁ、いい感じです」「わりと楽しいですよ」などと訳せます。  \n\n【おすすめ返信】  \n英: That’s great to hear! 😊  \n日: それは嬉しいですね！😊",
+      "timestamp": 1782641292336,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "285dd524-8551-410f-9f1d-23743c7d4fff",
+      "speaker": "friend",
+      "channel": "friend",
+      "content": "Around 1 hour from jakarta",
+      "timestamp": 1782641296056,
+      "translationJa": "ジャカルタから約1時間です。",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "31517601-86db-48aa-b1e9-14f8262f9f30",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "相手は「ジャカルタから約1時間の場所に住んでいます」と教えてくれました。  \n距離感を伝える自然な英語です！  \n\n【おすすめ返信】  \n英: Oh, that’s not too far! Do you often go to Jakarta?  \n日: あ、それならそんなに遠くないですね！ジャカルタにはよく行きますか？",
+      "timestamp": 1782641298140,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "ff59c85f-7be7-465a-b81f-307e90270d6d",
+      "speaker": "user",
+      "channel": "friend",
+      "content": "Oh, that's not too far. Do you often go to Jakarta?",
+      "timestamp": 1782641343860,
+      "translationJa": "あ、それほど遠くないですね。ジャカルタにはよく行きますか？",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "ef4c8b88-883f-412a-acdb-a7b12457c9c3",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "とても自然で良い文です！✨  \n「not too far」も「Do you often…?」の語順・使い方も完璧です。  \nちょっとカジュアルにしたいなら、\"Oh, that’s not too far!\" の後に 😊 をつけると、より親しみやすくなりますよ。",
+      "timestamp": 1782641345685,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "b7e31583-63da-406c-99b0-b323fce299a3",
+      "speaker": "friend",
+      "channel": "friend",
+      "content": "Terkadang",
+      "timestamp": 1782708171942,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "61134841-6162-49f3-86c2-ded14c84b70f",
+      "speaker": "friend",
+      "channel": "friend",
+      "content": "Terkadang",
+      "timestamp": 1782708889123,
+      "translationJa": "ときどき",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "4b8b8692-6caa-4572-9a8e-ac8ae0df7b52",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "「たまに（ジャカルタに行く）」という意味です。  \n「Sometimes」のインドネシア語で、頻度は少ないけど時々行く、というニュアンスです。  \n返信では、自然に会話を続けられるよう、具体的な質問や共感を添えるとGoodです。\n\n【おすすめ返信】\n英: Oh, cool! What do you usually do when you go there?\n日: おお、いいね！そこへ行ったときは、普段何をするの？",
+      "timestamp": 1782708892787,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    }
+  ]
+}

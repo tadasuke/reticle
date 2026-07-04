@@ -1,0 +1,124 @@
+{
+  "messages": [
+    {
+      "id": "284f49a5-04db-4187-bd92-28f7be4049bf",
+      "speaker": "user",
+      "channel": "friend",
+      "content": "Hi! Nice to meet you!!",
+      "timestamp": 1782564466493,
+      "translationJa": "こんにちは！はじめまして！！",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "22b781c9-d652-43ea-89ee-d553489d208e",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "いいね！「Nice to meet you!」は完璧な初めの挨拶です✨  \n「Hi!」と合わせて使うと、明るくて親しみやすい印象になりますよ。",
+      "timestamp": 1782564468136,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "d8facdff-d435-43e1-b16b-d0d4d1678257",
+      "speaker": "friend",
+      "channel": "friend",
+      "content": "Hi",
+      "timestamp": 1782564471494,
+      "translationJa": "こんにちは！",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "9fad4ed8-7744-48dd-946f-46dce0346b20",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "リサさんが「Hi」と挨拶してくれました！シンプルですが、とても自然でフレンドリーな始まりです。  \n返事は軽く、明るく、少し個性を加えるとGoodです。\n\n【おすすめ返信】\n英: Hi Risa! 😊 How’s your day going?\n日: こんにちは、リサさん！😊 今日はどんな一日ですか？",
+      "timestamp": 1782564473649,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "e005f0b5-e907-4927-b7ca-c3dec36cd515",
+      "speaker": "user",
+      "channel": "friend",
+      "content": "Hi Risa! 😊",
+      "timestamp": 1782564493822,
+      "translationJa": "こんにちは、リサさん！😊",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "7cc27b62-e9ea-4538-aa0e-087c27952626",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "いいね！「Hi Risa! 😊」は自然で親しみやすく、名前を呼ぶのもとても良いです✨  \n絵文字もほどよく、温かみが伝わりますよ。",
+      "timestamp": 1782564495318,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "9570b134-b7fb-46dd-b30b-5efaadd93622",
+      "speaker": "user",
+      "channel": "friend",
+      "content": "I'm from Yokohama, Japan. How about  you?",
+      "timestamp": 1782564520492,
+      "translationJa": "私は横浜出身です。あなたは？",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "4b1b5ccd-d740-43a6-baba-96f5986f280b",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "自然な自己紹介です！「I'm from Yokohama, Japan.」は完璧です✨  \n「How about you?」もとてもよく使われるフレーズで、会話をスムーズに進めますよ。",
+      "timestamp": 1782564521970,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "54e2987f-a438-4d53-87f9-75db9a4d012c",
+      "speaker": "friend",
+      "channel": "friend",
+      "content": "Im from jakarta",
+      "timestamp": 1782641719584,
+      "translationJa": "私はジャカルタ出身です。",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "b85ea5f0-bc99-4cf7-b103-0a22c8c1e322",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "リサさんは「I’m from Jakarta」と、自分の出身地を教えてくれました！  \nジャカルタはインドネシアの首都ですね。優しく返すと、会話が続きやすくなります。\n\n【おすすめ返信】\n英: Oh, Jakarta! I’ve heard it’s vibrant and full of energy — have you lived there your whole life?\n日: あ、ジャカルタなんですね！活気があってエネルギッシュな街だと聞きました——生まれてからずっとそこに住んでるんですか？",
+      "timestamp": 1782641722216,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "8b6e9542-3ed7-4de1-b932-12d47f5e7889",
+      "speaker": "user",
+      "channel": "friend",
+      "content": "Nice! Next month, I going to Jakarta!!",
+      "timestamp": 1782641745220,
+      "translationJa": "いいね！来月、私はジャカルタに行きます！",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "2e6d72fc-409d-4f58-b44b-1a90f6cd19eb",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "「Nice! Next month, I going to Jakarta!!」の文は、主語と動詞の一致が少し気になります。  \n自然な言い方は：**\"I’m going to Jakarta next month!\"** です。😊",
+      "timestamp": 1782641746762,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    }
+  ]
+}

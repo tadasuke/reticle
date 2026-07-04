@@ -1,0 +1,16 @@
+id: real-0007
+label: Pio
+age: 29
+nationality: ''
+gender: ''
+sourceApp: Tinder
+bio: ''
+notes: ''
+createdAt: '2026-06-27T10:52:15+00:00'
+updatedAt: '2026-06-29T05:06:55+00:00'
+lastInteractionAt: '2026-06-29T05:06:52+00:00'
+photos:
+- id: photo-0001
+  filename: photo-0001.png
+  createdAt: '2026-06-28T10:23:30+00:00'
+defaultPhotoId: photo-0001

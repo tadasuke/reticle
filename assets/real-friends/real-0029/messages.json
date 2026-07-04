@@ -1,0 +1,104 @@
+{
+  "messages": [
+    {
+      "id": "cf7bcc2d-dde0-4f74-8eb4-84bd9b0dcacf",
+      "speaker": "user",
+      "channel": "friend",
+      "content": "Hi! Nice to meet you!!",
+      "timestamp": 1782642025496,
+      "translationJa": "こんにちは！はじめまして！！",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "b00996f7-b92e-4f73-9e27-01bd249de582",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "いいね！自然な挨拶だよ。  \n「Nice to meet you!」は会った直後によく使うけど、Tinderでまだ会ってないなら、「Nice to chat with you!」のほうがちょっと柔らかくて自然かも😊",
+      "timestamp": 1782642027157,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "0b7203d2-81e8-42f4-ae25-ede714c041d5",
+      "speaker": "friend",
+      "channel": "friend",
+      "content": "Nice to meet you too",
+      "timestamp": 1782642033211,
+      "translationJa": "あなたにも、はじめまして！",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "aa0c2b86-5476-43b1-8703-c82bb3a4f808",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "相手も「はじめまして！」と返してくれました。  \n丁寧でフレンドリーな雰囲気ですね。  \n次は軽く自己紹介や質問を添えると会話が広がりやすいですよ。\n\n【おすすめ返信】\n英: I'm Chisato — I live in Tokyo and love trying new cafés! What about you?  \n日: 私はチサトです。東京在住で、新しいカフェを巡るのが大好きなんです！あなたは？",
+      "timestamp": 1782642035962,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "6ce40e1d-8f09-4a47-b6e4-3dad0a8e8f5e",
+      "speaker": "user",
+      "channel": "friend",
+      "content": "Hi Indha!",
+      "timestamp": 1782642064152,
+      "translationJa": "こんにちは、インダ！",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "18c464dd-feae-48ef-b231-98f2f517474a",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "名前が「Indah」なので、「Indha」はスペルミスです。  \n正しくは → **Hi Indah!** でOKです！  \n（発音は「インダ」に近いよ）",
+      "timestamp": 1782642065736,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "57a90659-8e1d-4751-9aef-a54de84cc22f",
+      "speaker": "user",
+      "channel": "friend",
+      "content": "Yokohama",
+      "timestamp": 1782642067436,
+      "translationJa": "横浜",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "b141792f-935b-402d-b36c-d49a496c573f",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "「Yokohama」だけだと、文になっていないよ。  \n相手に伝わるには、たとえば：  \n**\"I’m from Yokohama!\"** や **\"I live in Yokohama.\"** が自然です！",
+      "timestamp": 1782642068859,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "1a6956ec-2703-490a-8aa1-fef4c29277ff",
+      "speaker": "user",
+      "channel": "friend",
+      "content": "I'm from Yokohama, Japan. How about you?",
+      "timestamp": 1782642072747,
+      "translationJa": "私は日本・横浜出身です。あなたは？",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "6235eb18-da8d-497b-9197-85c74d2251da",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "完璧！自然で丁寧な自己紹介だよ。  \n「I’m from Yokohama, Japan. How about you?」は、文法も意味もバッチリです✨",
+      "timestamp": 1782642073923,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    }
+  ]
+}

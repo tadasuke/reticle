@@ -1,0 +1,124 @@
+{
+  "messages": [
+    {
+      "id": "44f15cae-e142-48cd-af5d-1e1ab0587c87",
+      "speaker": "user",
+      "channel": "friend",
+      "content": "Hi! Nice to meet you!!",
+      "timestamp": 1782570131457,
+      "translationJa": "こんにちは！はじめまして！！",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "1f75c88b-a3f4-42ae-a07e-8da744f3aeb7",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "いいね！「Nice to meet you!」はとても自然な挨拶です。  \n「Hi!」と合わせて使うときは、感嘆符は1つで十分なので、「Hi! Nice to meet you!」がよりシンプルでナチュラルですよ。",
+      "timestamp": 1782570133230,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "e0d06cf7-f783-49c0-b5a5-e6c64e9f47b5",
+      "speaker": "friend",
+      "channel": "friend",
+      "content": "Nice to meet you to",
+      "timestamp": 1782570135088,
+      "translationJa": "はじめまして！",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "a0f50923-509c-4e26-b440-7bf43d6ce978",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "「Nice to meet you, too」のつもりで「to」とタイプミスしたようです（正しくは「too」）。  \n要するに「こちらこそ、はじめまして！」という意味です。  \n\n【おすすめ返信】\n英: Nice to meet you too! 😊\n日: こちらこそ、はじめまして！😊",
+      "timestamp": 1782570136960,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "b21870e7-0c50-401c-92c7-5a37f15b4a1d",
+      "speaker": "friend",
+      "channel": "friend",
+      "content": "How are you",
+      "timestamp": 1782570139437,
+      "translationJa": "元気？",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "65849d72-b613-482f-bff8-a020180128e2",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "「How are you?」は「お元気ですか？」という定番の挨拶です。  \nカジュアルなやり取りでは、軽く返すのが自然です。  \n\n【おすすめ返信】\n英: I'm doing great, thanks! How about you?\n日: とても元気です、ありがとう！あなたはどうですか？",
+      "timestamp": 1782570141421,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "cf35268d-861a-4db4-b942-c1a93fa6b232",
+      "speaker": "user",
+      "channel": "friend",
+      "content": "I'm doing great, thanks! How about you?",
+      "timestamp": 1782570154753,
+      "translationJa": "元気です、ありがとう！あなたは？",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "503ae486-4748-46de-9d7a-df6bdfe4cb1f",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "素晴らしい！自然で明るい返事です。  \n「How about you?」もとてもよく使われる表現で、完璧です！😊",
+      "timestamp": 1782570155879,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "e373d01d-7abc-4676-8dab-64ad911badf9",
+      "speaker": "friend",
+      "channel": "friend",
+      "content": "Im good",
+      "timestamp": 1782570887964,
+      "translationJa": "元気です。",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "1c77e22f-0bc0-4326-af84-f44da2265693",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "「I’m good」＝「元気です」「大丈夫です」。カジュアルでポジティブな返事です。  \n少し丁寧にしたいなら、「I’m doing well, thanks!」とも言えますが、今のままでも十分自然です。\n\n【おすすめ返信】\n英: That's great to hear! 😊\n日: それは何よりです！😊",
+      "timestamp": 1782570890224,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "8b1b9d00-9e03-4b47-9c37-7f1d480be6b3",
+      "speaker": "friend",
+      "channel": "friend",
+      "content": "Where are you",
+      "timestamp": 1782570891610,
+      "translationJa": "あなたはどこにいますか？",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "7c7618f5-dfc4-43c2-8d38-af0733fdf184",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "「Where are you?」は「あなたは今どこにいますか？」という意味で、場所（例：都市・国）や状況（例：仕事中？自宅？）を聞いている可能性があります。  \nカジュアルな会話では、軽く答えてから逆に聞くと自然です。\n\n【おすすめ返信】\n英: I'm in Tokyo! How about you?\n日: 東京にいます！あなたは？",
+      "timestamp": 1782570893909,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    }
+  ]
+}

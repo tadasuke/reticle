@@ -1,0 +1,49 @@
+---
+description: 用語集（glossary.mdc）更新時に Notion 用語集を同期する
+alwaysApply: true
+---
+
+# 用語集 Notion 同期ルール
+
+`.cursor/rules/glossary.mdc` が正本。Notion 用語集は人間向けの鏡像。
+
+## Notion 用語集ページ
+
+- **page_id**: `38ca7898-a2f1-818e-a125-d39c11284e32`
+- **URL**: https://app.notion.com/p/38ca7898a2f1818ea125d39c11284e32
+- **親**: Reticle ホーム（`375a7898-a2f1-8079-9ed6-ca6ecf3b8de9`）配下のみ更新可
+
+## トリガー条件（いずれか）
+
+- ユーザーが「用語集を更新」「用語を追加」「用語を変更」等と指示
+- `.cursor/rules/glossary.mdc` を編集した
+
+## 必須手順
+
+1. `glossary.mdc` の変更を完了する
+2. Notion MCP `notion-fetch` で用語集ページ（上記 page_id）の現状を取得する
+3. 変更された用語セクションのみ `notion-update-page`（`update_content`）で差分更新する
+4. 新規用語は該当カテゴリ見出し（`# アプリ・環境` 等）下へ `insert_content` または `update_content` で追加する
+5. 削除した用語は Notion からも該当 `## 用語名` ブロックとその表を除去する
+6. ユーザーに「Cursor 用語集 + Notion 用語集を更新しました」と報告する
+
+## Notion ページのフォーマット
+
+`glossary.mdc` と同じ **名称・意味・備考** の3列テーブル。大項目（アプリ・環境 / キャラクター / 会話・UI / コード・API）で区切る。備考は必要な場合のみ記載。
+
+```
+# カテゴリ名
+<table header-row="true">
+<tr><td>名称</td><td>意味</td><td>備考</td></tr>
+<tr><td>...</td><td>...</td><td>...</td></tr>
+</table>
+```
+
+- 概要セクションの「最終更新」日付も更新する
+
+## 注意事項
+
+- Notion 更新前に必ず `notion-fetch` で現状確認（`old_str` は完全一致が必要）
+- Reticle ホーム配下の用語集ページのみ更新（他ページは触らない）
+- `glossary.mdc` → Notion の一方向同期。Notion の変更を Cursor に自動反映しない
+- Notion Markdown 仕様: MCP リソース `notion://docs/enhanced-markdown-spec` を参照

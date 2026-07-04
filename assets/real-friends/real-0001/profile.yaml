@@ -1,0 +1,16 @@
+id: real-0001
+label: Nitha
+age: 26
+nationality: ''
+gender: ''
+sourceApp: Tinder
+bio: ''
+notes: ''
+createdAt: '2026-06-27T10:26:01+00:00'
+updatedAt: '2026-06-28T09:54:30+00:00'
+lastInteractionAt: '2026-06-27T12:46:56+00:00'
+photos:
+- id: photo-0001
+  filename: photo-0001.png
+  createdAt: '2026-06-28T09:54:30+00:00'
+defaultPhotoId: photo-0001

@@ -1,0 +1,84 @@
+{
+  "messages": [
+    {
+      "id": "e60003a3-fca6-4897-807e-ff1e6a6fa781",
+      "speaker": "user",
+      "channel": "friend",
+      "content": "Hi! Nice to meet you!!",
+      "timestamp": 1782641797704,
+      "translationJa": "こんにちは！はじめまして！！",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "b3edb7d1-6474-41ca-8417-e830a5fa4623",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "いいね！自然な挨拶だよ。「Hi! Nice to meet you!」で十分伝わるけど、もう少しカジュアルにしたいなら「Hi Winda! Nice to meet you!」と名前を入れると親しみやすくなるよ。",
+      "timestamp": 1782641799427,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "3111242b-832d-4773-bd8b-a2c15b1639bc",
+      "speaker": "friend",
+      "channel": "friend",
+      "content": "hi. nice to meet you too!",
+      "timestamp": 1782641800613,
+      "translationJa": "こんにちは！こちらこそ、はじめまして！",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "a39b0cd0-435b-4472-b5e2-d8f00f827a61",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "ウィンダさんが「こんにちは！こちらこそよろしく！」と返してくれました。丁寧でフレンドリーな返事です。\n\n【おすすめ返信】\n英: Hi Winda! I’m Chisato — nice to meet you too! 😊  \n日: ウィンダさん、こんにちは！私はチサトです。こちらこそよろしくお願いします！😊",
+      "timestamp": 1782641802440,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "21d789ce-3e25-4c94-bc7c-58ad0277f936",
+      "speaker": "user",
+      "channel": "friend",
+      "content": "Hi Winda!",
+      "timestamp": 1782641857345,
+      "translationJa": "こんにちは、ウィンダさん！",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "43590403-bb84-42c2-b6a5-1eacb59887be",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "シンプルでいいね！「Hi Winda!」は自然で親しみやすい挨拶です。  \nもう一言添えると、会話がスムーズに続きやすくなりますよ（例：「Hi Winda! 😊」）。",
+      "timestamp": 1782641859003,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "99a2b65b-5a34-4c1b-ba3b-179fb13370de",
+      "speaker": "user",
+      "channel": "friend",
+      "content": "I'm from Yokohama, Japan. But I going to Jakarta next month!",
+      "timestamp": 1782641861965,
+      "translationJa": "私は横浜出身です。でも、来月ジャカルタに行きます！",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "6e24d77d-06e0-4f0c-931e-6afd4d74cbc5",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "「I’m from Yokohama, Japan.」は完璧！  \n「But I going to Jakarta next month!」→ 「I’m going to Jakarta next month!」が自然な言い方だよ。",
+      "timestamp": 1782641863191,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    }
+  ]
+}

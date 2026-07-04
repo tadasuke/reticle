@@ -1,0 +1,16 @@
+id: real-0027
+label: Winda
+age: 26
+nationality: ''
+gender: ''
+sourceApp: Tinder
+bio: ''
+notes: ''
+createdAt: '2026-06-28T10:16:25+00:00'
+updatedAt: '2026-06-28T10:17:43+00:00'
+lastInteractionAt: '2026-06-28T10:17:41+00:00'
+photos:
+- id: photo-0001
+  filename: photo-0001.png
+  createdAt: '2026-06-28T10:16:30+00:00'
+defaultPhotoId: photo-0001

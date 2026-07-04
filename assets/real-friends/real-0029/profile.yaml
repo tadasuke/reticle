@@ -1,0 +1,16 @@
+id: real-0029
+label: Indah
+age: 30
+nationality: ''
+gender: ''
+sourceApp: Tinder
+bio: ''
+notes: ''
+createdAt: '2026-06-28T10:20:13+00:00'
+updatedAt: '2026-06-28T10:21:13+00:00'
+lastInteractionAt: '2026-06-28T10:21:12+00:00'
+photos:
+- id: photo-0001
+  filename: photo-0001.png
+  createdAt: '2026-06-28T10:20:18+00:00'
+defaultPhotoId: photo-0001

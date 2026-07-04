@@ -1,0 +1,16 @@
+id: real-0028
+label: Mila
+age: 22
+nationality: ''
+gender: ''
+sourceApp: Tinder
+bio: ''
+notes: ''
+createdAt: '2026-06-28T10:18:35+00:00'
+updatedAt: '2026-06-28T10:19:22+00:00'
+lastInteractionAt: '2026-06-28T10:19:21+00:00'
+photos:
+- id: photo-0001
+  filename: photo-0001.png
+  createdAt: '2026-06-28T10:18:41+00:00'
+defaultPhotoId: photo-0001

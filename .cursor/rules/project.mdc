@@ -1,0 +1,390 @@
+---
+description: バディトーク（reticle）プロジェクトの仕様・設計方針・運用ルール
+alwaysApply: true
+---
+
+# reticle / バディトーク（buddy talk）
+
+英会話練習アプリ。AIキャラクターが2人同時に動作する。**対象ユーザーは英会話初心者（CEFR A1–A2）**。
+
+プロジェクト用語の定義は [`.cursor/rules/glossary.mdc`](.cursor/rules/glossary.mdc) を参照。Cursor への指示は用語集の呼称を使う。
+
+## 技術スタック
+
+| 項目 | 内容 |
+|------|------|
+| プロジェクト名 | reticle |
+| アプリ名 | バディトーク（buddy talk） |
+| 言語 | TypeScript（フロント）/ Python（API） |
+| フレームワーク | React / FastAPI |
+| ビルドツール | Vite |
+| スタイリング | Tailwind CSS |
+
+## キャラクター設計
+
+会話相手（AIフレンド）と相談相手（バディ）は別管理。データは `assets/` 配下の4ディレクトリに分離する。
+
+| ディレクトリ | 用途 |
+|-------------|------|
+| `assets/friends/` | AIフレンドキャラクターデータ（`persona.yaml` + 手動 `reference.png`） |
+| `assets/buddies/` | バディキャラクターデータ（`persona.yaml` + 手動 `reference.png`） |
+| `assets/images/` | キャラクター画像作成画面のプロンプト・生成画像（`spec.yaml` 等） |
+| `assets/real-friends/` | リアルフレンドのプロフィール（`profile.yaml`）、画像（`photos/`）、会話履歴（`messages.json`） |
+
+### 会話相手：AIフレンド
+
+- 管理画面 `/admin/friend-characters` で名前・年齢・ペルソナ等を登録
+- ID は任意指定、または `friend-0001` 形式で自動採番
+- 画像は `assets/friends/{friendId}/reference.png` に手動配置（アップロード機能なし）
+- AIトップ画面は `GET /friend-types` で有効な AI フレンド一覧を表示
+
+共通ルール:
+- 英語はネイティブレベル
+- ユーザーが日本語で話しかけても**英語でのみ**返答する
+- 返答は**テキスト表示**
+- **初心者向け**: 1–2文の短い返答、やさしい単語。基本は相づち・感想で返す。質問は3〜4ターンに1回程度、最大1つ（直前の返答で質問した場合は次は必ず文のみ）
+
+### 相談相手：バディ
+
+`assets/buddies/{buddyId}/persona.yaml` から読み込む。seed データ:
+
+| ID | 名前 | 概要 |
+|----|------|------|
+| `coach` | チサト | 30代・バイリンガルコーチ（デフォルト） |
+| `gal-coach` | あかり | 20歳・女性。完全ギャル・タメ口・ドS。イジりつつも的確 |
+
+- トップ画面は `GET /buddy-types` で有効なバディ一覧を表示
+
+共通ルール:
+- AI フレンドとの会話で困ったとき、**日本語で**相談できる
+- 会話相手の**文脈を把握**したうえでアドバイスする
+- 返答は**テキスト表示**
+- **初心者向け**: 2–4文または短い箇条書き、例文は1つに絞る
+- **英語のみ指摘**: 文法・語彙・言い回しに集中。「今はそれを聞かないほうがいい」「初対面でそれはダメ」など、話題・内容の適切さには言及しない
+
+### 会話相手：リアルフレンド
+
+- **リアルトーク画面**（`/real`）のサイドバーまたは登録モーダルで名前・年齢・国籍・性別・出会ったアプリ（例: Tinder）・プロフィール・メモを登録
+- ID は `real-0001` 形式で自動採番
+- 会話履歴は `assets/real-friends/{realFriendId}/messages.json` に永続保存（develop）。各メッセージに `translationJa`（日本語訳）を保存可
+- **画像**: 編集モーダルから複数枚アップロード可（JPEG / PNG / WebP、最大 5MB）。`assets/real-friends/{realFriendId}/photos/` に保存。`profile.yaml` の `defaultPhotoId` でデフォルト表示を指定。サイドバー一覧・フレンドパネル上部に表示（未登録時は名前頭文字）
+- API: `GET/POST/PUT/DELETE /real-friends/*`、`GET/PUT /real-friends/{id}/messages`、`GET/POST /real-friends/{id}/photos`、`PUT /real-friends/{id}/photos/default`、`DELETE /real-friends/{id}/photos/{photoId}`、`GET /media/real-friends/*`、`POST /conversation`（`conversationMode: 'real'`, `mode: 'translate'`）
+- 一覧は**最終やり取り日時**（`lastInteractionAt`）の降順
+
+共通ルール:
+- 相手は実在人物。AI は代わりに返答しない
+- ユーザーは Tinder 等から**相手・自分のメッセージをコピペ**して記録する
+- バディのサポートタイプは **High 固定**
+
+## AIモード会話フロー
+
+1. **モード選択画面**（`/`）で AIモードを選択 → **AIトップ画面**（`/ai`）
+2. ユーザーが **AIフレンド・バディのタイプ**を選択してスタート（シナリオは固定）
+3. 選んだ AI フレンドが英語で話しかける（テキスト表示）
+4. **AIトップ画面**で**サポートタイプ**（High / Middle / Low）を選択（初期値 Middle）。**AIトーク画面**のバディパネルでも会話中に切り替え可
+5. ユーザーが英語でテキスト入力して返答
+6. サポートタイプに応じてバディが自動支援（手動相談は全タイプで可能）:
+   - **High**: Middle の添削に加え、AI フレンドのメッセージ（オープニング含む）表示直後に日本語訳・おすすめ返答などを提示
+   - **Middle**: ユーザーが AI フレンドへ英語送信直後に、英語の添削・アドバイス（AI フレンド返答と並列表示）
+   - **Low**: 自動送信なし。ユーザーがバディへ話しかけるまでバディからメッセージは来ない
+7. 困ったら選んだバディに日本語で相談（手動）
+8. **バディへの翻訳依頼** — 「翻訳して」「どういう意味？」等の翻訳依頼を検知した場合、通常 consult ではなく専用 translate API（`mode: 'translate'`, `conversationMode: 'ai'`）を使用。AI フレンドの**最後の発言**（`speaker: 'friend'`）を**全文**日本語訳し、バディ口調の短い前置き + 訳文を返す。フレンド発言がまだない場合は API を呼ばずバディが案内する。文法・返信例など通常の相談は従来の consult のまま
+9. バディのアドバイスをもとに AI フレンドへ返答
+10. **AI フレンドとの会話を巻き戻し** — **AI フレンドのメッセージ**（最終メッセージ除く）に「ここまで戻る」ボタン。ユーザーの送信済みメッセージには表示しない。確認後、選択位置以降のフレンドチャンネルメッセージのみ削除（バディの相談・自動支援は残す）。送信中・タイピング中は無効
+
+## リアルモード会話フロー
+
+1. **モード選択画面**（`/`）でリアルモードを選択 → **リアルトーク画面**（`/real`）を表示（3カラム）
+2. 左サイドバーにリアルフレンド一覧（最終やり取り降順）。先頭を自動選択して会話をロード。友だち0人の場合は中央に空状態
+3. ヘッダーでバディを選択（初回のみ。`localStorage` に保存し、フレンド切替・リロード後も固定）。サポートタイプ選択 UI なし、**High 固定**
+4. 中央フレンドパネルで Tinder 等からコピペ:
+   - 「相手のメッセージを貼り付け」→ 相手発言として記録 → 英文下に日本語訳表示 → バディが support（訳 + おすすめ返答）
+   - 「自分のメッセージを貼り付け」→ 自分の発言として記録 → 英文下に日本語訳表示 → バディが feedback（英文添削）
+5. 困ったらバディに日本語で手動相談（consult）
+6. 会話履歴はリアルフレンドごとに API 経由で永続保存。サイドバーで別フレンドをクリックして切替
+7. 既存履歴で `translationJa` が無いメッセージは表示時にバックグラウンドで translate API を呼び取得・保存（lazy backfill）
+8. **メッセージ削除** — コピペ登録したメッセージ（friend チャンネル）を**最後に登録した1件のみ**削除可（LIFO）。バディパネルのトークは削除しない。削除済みメッセージは今後の AI コンテキスト（friend 履歴）に含めない。AI モードの巻き戻しとは別機能
+
+## シナリオ（固定）
+
+**SNSで知り合った外国人との会話**（SNS上の初めてのやりとり）に固定。選択 UI はなし。
+
+- 会話相手は SNS でつながった相手として、チャット・DM の初めての会話を想定
+- 自己紹介・あいさつ・共通の話題を見つける練習
+
+## 技術設計方針
+
+### AI モデル
+
+**Qwen 固定**（設定画面にモデル選択 UI は表示しない。将来復活させる可能性があるため API・型定義は `qwen` / `claude` 両対応のまま維持）。
+
+| 利用 | プロバイダ | モデル | 用途 |
+|------|-----------|--------|------|
+| Qwen（固定） | Alibaba Cloud DashScope | `qwen-plus`（Singapore） | AI フレンド・バディのすべての応答 |
+
+- オープニング・AI フレンド返答・バディ相談・自動支援（Middle の feedback / High の support）の**すべて**に Qwen を適用
+- API リクエストに `aiModel: "qwen"` を含める
+- フロントエンドは API を呼び出すのみ（API キーはフロントに置かない）
+
+### Claude API
+
+- AI フレンド用・バディ用で**別のシステムプロンプト**を使用（同一 Claude モデル）
+- 会話履歴は AI フレンド・バディ間で**共有**する
+- SDK: `anthropic`（Python、API サーバー側）
+- モデル: `claude-sonnet-4-6`
+
+### Qwen API
+
+- AI フレンド用・バディ用で**別のシステムプロンプト**を使用（同一 Qwen モデル）
+- OpenAI 互換エンドポイント経由（`openai` Python SDK）
+- エンドポイント: `https://dashscope-intl.aliyuncs.com/compatible-mode/v1`（Singapore）
+- モデル: `qwen-plus`（環境変数 `QWEN_MODEL` で変更可）
+- 環境変数: `DASHSCOPE_API_KEY`, `QWEN_BASE_URL`, `QWEN_MODEL`
+
+### 共通 API 設計
+
+- **develop**: Python FastAPI（ローカル）
+- **staging / product**: API Gateway → Python Lambda
+
+### 画面構成
+
+0. **モード選択画面** — `/`。AIモード（`/ai`）とリアルモード（`/real`）を選択
+1. **AIトップ画面** — `/ai`。AIフレンド（管理画面で登録）・バディ（`persona.yaml`）・**サポートタイプ**を選択し「会話を始める」（シナリオは SNS 初チャット固定・選択 UI なし。AI モデルは Qwen 固定・選択 UI なし）
+2. **AIトーク画面** — `/ai`（会話中）。左右分割
+   - 左: AI フレンドとの英語会話（履歴 + 英語入力）
+   - 右: バディへの日本語相談（履歴 + 日本語入力）。ヘッダーに**サポートタイプ**（High / Middle / Low）切り替え UI
+   - モバイルは縦積み（`md:` 以上で左右分割）
+   - フレンド / バディそれぞれのメッセージエリアは**個別にスクロール**
+   - フレンドパネルヘッダーに `reference.png` を表示（`FriendType.referenceUrl` → `GET /media/friends/*`）
+3. **リアルトーク画面** — `/real`。3カラム（`md:` 以上）
+   - 左: リアルフレンド一覧（最終やり取り降順）。クリックで会話切替。下部に新規登録導線
+   - 中: リアルフレンドとの会話記録（Tinder 等からコピペ。相手・自分の2ボタン）。各英文下に日本語訳
+   - 右: バディへの日本語相談。**サポートタイプ High 固定**（切替 UI なし）
+   - ヘッダー: バディ選択（初回設定後 `localStorage` で固定）、新規登録ボタン
+   - 登録・編集は `RealFriendFormModal`（モーダル）
+4. **管理者用キャラクター画像作成画面** — `/admin/character-images`（会話画面とは別ルート。develop / ローカル API のみ。認証なし）
+5. **管理者用フレンドキャラクター作成画面** — `/admin/friend-characters`（会話画面とは別ルート。develop / ローカル API のみ。認証なし）
+
+### 管理者用フレンドキャラクター作成（実装済み・local のみ）
+
+名前・年齢・ペルソナ等を登録する内部ツール。画像は手動配置（アップロード機能なし）。
+
+| 項目 | 内容 |
+|------|------|
+| URL | `http://localhost:5173/admin/friend-characters` |
+| 導線 | AIトップ画面フッター「フレンド作成（管理者）」 |
+| ID | 任意指定、または `friend-0001` 形式で自動採番 |
+| API | `GET/POST/PUT/DELETE /admin/friend-types/*`、`GET /friend-types`（公開一覧） |
+| 保存先 | `assets/friends/{friendId}/persona.yaml` |
+| 画像 | `assets/friends/{friendId}/reference.png` を手動配置。`GET /media/friends/*` で表示 |
+| トップ画面 | `GET /friend-types` で有効な AI フレンドを一覧表示 |
+
+### 管理者用キャラクター画像作成（実装済み・local のみ）
+
+参照ポートレートの生成・修正・ストレステスト・採用を行う内部ツール（画像作成に特化）。
+
+| 項目 | 内容 |
+|------|------|
+| URL | `http://localhost:5173/admin/character-images` |
+| 導線 | AIトップ画面フッター「キャラ画像作成（管理者）」 |
+| ID | 自動採番（`img-0001`, `img-0002`, ...）。キャラクター名の入力なし |
+| API | `GET/PUT/POST /admin/characters/*`（`local_server.py`） |
+| 画像配信 | `GET /media/images/*` |
+| 保存先 | `assets/images/{characterId}/`（`spec.yaml`, `candidates/`, `stress-test/`, `reference.png`） |
+| 画像モデル | 候補生成: `qwen-image-2.0-pro` / 修正・stress: `qwen-image-edit-max`（環境変数で変更可） |
+
+詳細は [docs/character-image-generation.md](../docs/character-image-generation.md)。
+
+### ディレクトリ構成
+
+```
+src/
+  types/conversation.ts, characterImageStudio.ts, friendCharacter.ts, realFriend.ts
+  data/scenarios.ts, aiModels.ts
+  lib/apiClient.ts, adminApiClient.ts, realApiClient.ts, realModeStorage.ts
+  hooks/useConversation.ts, useCharacterImageStudio.ts, useFriendCharacterAdmin.ts
+  hooks/useRealFriends.ts, useRealConversation.ts
+  admin/CharacterImageStudio.tsx, FriendCharacterAdmin.tsx, admin/components/
+  components/
+    mode/ModeSelect.tsx
+    scenario/ScenarioSelect.tsx
+    conversation/ConversationLayout, FriendPanel, BuddyPanel, MessageList, MessageBubble, ChatInput
+    common/LoadingIndicator, ErrorBanner
+  real/RealApp.tsx, RealConversationLayout.tsx, RealFriendPanel.tsx, RealFriendSidebar.tsx, RealFriendMessageList.tsx, RealFriendFormModal.tsx
+api/
+  local_server.py
+  src/conversation_service.py, prompts.py, scenarios.py, character_types.py, handler.py
+  src/character_image_studio/
+  src/friend_characters/
+  src/buddy_characters/
+  src/real_friends/
+  src/assets_paths.py
+assets/
+  friends/{friendId}/persona.yaml, reference.png（手動配置）
+  buddies/{buddyId}/persona.yaml, reference.png（手動配置）
+  images/{characterId}/spec.yaml, candidates/, stress-test/, reference.png
+  real-friends/{realFriendId}/profile.yaml, photos/, messages.json
+```
+
+### 環境
+
+| 環境 | ホスティング | 用途 |
+|------|-------------|------|
+| develop | ローカル | 開発・動作確認 |
+| staging | AWS | 本番前の検証 |
+| product | AWS | 本番 |
+
+### AWS インフラ（staging / product）
+
+- **静的コンテンツ**: S3 に配置し、CloudFront で配信
+- **API**: API Gateway → Lambda
+- **DB**: DynamoDB（フルマネージド）
+
+### AWS 接続（開発・運用）
+
+- AWS との接続には、**AWS の公式 MCP サーバ**を使う
+- プロファイルは **`madfaction`** を使う
+- **禁止**: 他のプロファイルの情報を元に AWS に接続すること（`madfaction` 以外のプロファイル・認証情報の参照・利用は一切しない）
+
+#### AWS MCP セットアップ
+
+プロジェクト専用の [`.cursor/mcp.json`](.cursor/mcp.json) に AWS MCP Server を登録する。`mcp-proxy-for-aws` が `madfaction` プロファイルで SigV4 認証し、マネージドの AWS MCP Server に接続する。
+
+**前提**
+
+- `uv` / `uvx` がインストール済みであること
+- `~/.aws/credentials` に `madfaction` プロファイルが設定済みであること
+- `aws sts get-caller-identity --profile madfaction` が成功すること
+
+**設定後**
+
+1. Cursor を完全終了して再起動する
+2. Settings > MCP で `aws-mcp` が接続済みであることを確認する
+3. チャットで AWS 操作（例: S3 バケット一覧）を依頼して動作確認する
+
+**接続テスト例**
+
+```
+S3 のバケット一覧を取得して
+```
+
+**トラブルシュート**
+
+- MCP が接続できない: `aws sts get-caller-identity --profile madfaction` で認証を確認
+- 初回起動が遅い: `uvx` が `mcp-proxy-for-aws` を取得するため数分かかることがある
+
+### Alibaba Cloud 接続（開発・運用）
+
+- Alibaba Cloud CLI（`aliyun`）で接続する
+- プロファイルは **`fod-short`** を使う（`~/.aliyun/config.json` の `"name": "fod-short"`）
+- **禁止**: 他のプロファイルの情報を元に Alibaba Cloud に接続すること（`fod-short` 以外のプロファイル・認証情報の参照・利用は一切しない）
+
+**接続テスト例**
+
+```bash
+aliyun sts GetCallerIdentity --profile fod-short
+```
+
+### 環境変数
+
+**フロントエンド**（`.env`）:
+
+- `VITE_API_BASE_URL` — API のベース URL（develop: `http://localhost:8000`）
+
+**API**（`api/.env`）:
+
+- `ANTHROPIC_API_KEY` — Anthropic API キー（Claude 選択時）
+- `DASHSCOPE_API_KEY` — Alibaba Cloud Model Studio API キー（Qwen 選択時・画像生成）
+- `QWEN_BASE_URL` — Qwen エンドポイント（デフォルト: `https://dashscope-intl.aliyuncs.com/compatible-mode/v1`）
+- `QWEN_MODEL` — Qwen モデル名（デフォルト: `qwen-plus`）
+- `QWEN_IMAGE_MODEL` — 参照画像候補生成（デフォルト: `qwen-image-2.0-pro`）
+- `QWEN_IMAGE_EDIT_MODEL` — 画像修正・ストレステスト（デフォルト: `qwen-image-edit-max`）
+- `FRIEND_ASSETS_DIR` — フレンドデータ保存先（デフォルト: `../assets/friends`）
+- `REAL_FRIENDS_ASSETS_DIR` — リアルフレンドデータ保存先（デフォルト: `../assets/real-friends`）
+- `BUDDY_ASSETS_DIR` — バディデータ保存先（デフォルト: `../assets/buddies`）
+- `IMAGE_ASSETS_DIR` — 画像作成データ保存先（デフォルト: `../assets/images`）
+
+### 起動方法
+
+**推奨: Cursor スキル（2回目以降）**
+
+Agent モードのチャットで次のように依頼する:
+
+```
+開発環境を起動して
+```
+
+または `start-dev` スキルを明示する。エージェントが `.cursor/skills/start-dev/SKILL.md` に従い、API（`:8000`）とフロント（`:5173`）をバックグラウンドで起動する。API 起動時は DashScope（Qwen）への HTTPS が必要なため、エージェントの Shell では `full_network` 権限を使う。起動後に `POST /conversation`（translate）で Qwen 接続を確認する。`:8000` が応答しても Qwen が `Connection error` の場合は、サンドボックス制限付きで起動した API の可能性があるため、既存 uvicorn を止めて再起動する（手動ターミナル起動でも可）。
+
+**初回セットアップ**
+
+**API**
+
+```bash
+cd api
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+# .env に DASHSCOPE_API_KEY を設定（会話・画像作成の両方に必要）
+```
+
+**フロントエンド**
+
+```bash
+npm install
+cp .env.example .env
+# .env に VITE_API_BASE_URL=http://localhost:8000 を設定
+```
+
+**手動起動（ターミナル 2 本）**
+
+API（ターミナル 1）:
+
+```bash
+cd api
+source .venv/bin/activate
+uvicorn local_server:app --reload --port 8000
+```
+
+フロントエンド（ターミナル 2）:
+
+```bash
+npm run dev
+```
+
+管理者用画像作成: `http://localhost:5173/admin/character-images`
+
+ブラウザで表示された URL（通常 `http://localhost:5173`）を開く。本番ビルドは `npm run build`（`VITE_API_BASE_URL` に API Gateway の URL を指定）。
+
+### コンポーネント構成
+
+- **機能単位**でコンポーネントを分割する
+- 音声入力・音声出力は将来追加予定のため、**後から実装しやすい構造**にしておく（UI・ロジックの分離、拡張ポイントの確保）
+
+## 未実装（将来追加予定）
+
+現時点では実装しない。設計・コード変更時は拡張しやすさを優先する。
+
+- 会話中のリアルタイム AI 画像生成（`Message.attachment`、画像ジョブ）
+- 会話画面メッセージ吹き出し・バディパネルでの reference アバター表示
+- 管理者画面の認証・staging/Lambda デプロイ
+- 音声入力（マイクボタン）
+- 音声出力（AI フレンド返答の自動読み上げ）
+- AIモードの学習履歴の保存
+- シナリオの追加
+
+## Notion（仕様の正本）
+
+- **ホームページ**: https://app.notion.com/p/fuji-culture-x/Reticle-375a7898a2f180799ed6ca6ecf3b8de9?source=copy_link
+- **用語集（人間向け）**: https://app.notion.com/p/38ca7898a2f1818ea125d39c11284e32（Cursor 用語集 `glossary.mdc` の鏡像）
+- 仕様・設計・その他のプロジェクト情報は**すべて Notion に記述**する
+- 新規ページの作成は**ホームページ配下のみ**許可する
+- **禁止**: ホームページ以外の既存ページの更新、ホームページ以外への新規ページ追加
+
+## 開発時の運用ルール
+
+1. **仕様の追加・変更**があった場合、コード修正と**同時に**以下を必ず更新する
+   - この rules ファイル（`.cursor/rules/project.mdc`）
+   - Notion の該当ページ（ホームページ配下）
+2. このファイルおよび Notion は常にプロジェクトの**最新仕様**を反映した状態を保つ
+3. **用語の追加・変更**があった場合、[`.cursor/rules/glossary.mdc`](.cursor/rules/glossary.mdc) を更新し、[glossary-sync ルール](.cursor/rules/glossary-sync.mdc) に従い Notion 用語集も同期する

@@ -1,0 +1,84 @@
+{
+  "messages": [
+    {
+      "id": "97968545-8284-42e7-89bc-5ea6f792f122",
+      "speaker": "user",
+      "channel": "friend",
+      "content": "Hi! Nice to meet you!!",
+      "timestamp": 1782642429330,
+      "translationJa": "こんにちは！はじめまして！！",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "7c2202d7-2417-48c5-871c-1bf5f48bc243",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "いいね！「Nice to meet you!」は完璧な挨拶です。  \n「Hi!」と合わせて使うと、明るくてフレンドリーな印象になりますよ✨",
+      "timestamp": 1782642430560,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "4c1a9680-1888-4912-a59b-4a083d854d92",
+      "speaker": "friend",
+      "channel": "friend",
+      "content": "Nice to meet you",
+      "timestamp": 1782642432960,
+      "translationJa": "はじめまして！",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "e0b09f3c-a550-4760-8730-5807582a8c91",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "アルミさんが「Nice to meet you（はじめまして）」と挨拶してくれました。  \n丁寧で好印象な一言です。  \n返事は、同じく明るくシンプルに返すのが自然です。\n\n【おすすめ返信】\n英: Nice to meet you too! 😊\n日: こちらこそ、はじめまして！😊",
+      "timestamp": 1782642434787,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "ba2762c0-d8d6-46c0-bcdf-f9b3a4d67b1a",
+      "speaker": "user",
+      "channel": "friend",
+      "content": "HI Almy!",
+      "timestamp": 1782642470101,
+      "translationJa": "やっほー、アルミさん！",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "f938e4c7-0a52-407c-9ebb-b45b9832c1ee",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "「HI Almy!」いいね！名前を呼んで挨拶するのは、親しみやすく自然です。  \nただ、英語では「Hi」の後に感嘆符（!）は1つで十分。「HI」は大文字で書くより「Hi」が一般的なので、次は「Hi Almy!」と書いてみてくださいね 😊",
+      "timestamp": 1782642472171,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "fe295d2b-1e5a-4bfe-b076-2da95e8571f9",
+      "speaker": "user",
+      "channel": "friend",
+      "content": "I'm from Yokohama, Japan. How about you?",
+      "timestamp": 1782642474601,
+      "translationJa": "私は日本・横浜出身です。あなたは？",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "34f7e59f-8b98-4350-91e4-0165b169cad7",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "自然で丁寧な自己紹介だね！「I'm from Yokohama, Japan.」は完璧です。  \n「How about you?」も、相手に話題を振るのにとても自然な表現です ✅",
+      "timestamp": 1782642475977,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    }
+  ]
+}

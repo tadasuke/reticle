@@ -1,0 +1,84 @@
+{
+  "messages": [
+    {
+      "id": "67a69d20-8139-4fa8-9a73-d132e732daab",
+      "speaker": "user",
+      "channel": "friend",
+      "content": "Hi! Nice to meet you!!",
+      "timestamp": 1782569456938,
+      "translationJa": "こんにちは！はじめまして！！",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "c9f614ee-ad37-4cd5-985a-fe366aac601f",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "いいね！「Nice to meet you!」はとても自然な挨拶です。  \n「Hi!」と合わせて使うと、明るくて親しみやすい印象になりますよ。",
+      "timestamp": 1782569458344,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "e72a862b-c26f-4754-95b7-9b56d9c3bb04",
+      "speaker": "friend",
+      "channel": "friend",
+      "content": "Iyaaa",
+      "timestamp": 1782569460345,
+      "translationJa": "いやーん",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "811ce3ee-9374-4ee5-b44c-91acc0a5a6ad",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "「Iyaaa」は日本語の「いやー」で、軽い驚きや照れ・ちょっとした戸惑いを表すニュアンスです。  \nたぶん、あなたの挨拶にちょっと照れたり、和やかに受け答えしようとしている感じですね。\n\n【おすすめ返信】\n英: Haha, nice to meet you too! 😊  \n日: はは、こちらこそよろしくお願いします！😊",
+      "timestamp": 1782569462914,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "7fd5c213-0c6d-4cb1-8406-b82227ca0256",
+      "speaker": "user",
+      "channel": "buddy",
+      "content": "他のオススメ返信を考えて",
+      "timestamp": 1782569727245,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "e0491314-58af-4bba-b7f5-1ae361e6c8a4",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "もちろん！もう少しカジュアルにしたいなら：\n\n- 「Haha, same here! 😊」  \n- 「Aww, thanks! 😊」（相手の「Iyaaa」を優しく受け止める感じ）\n\n【おすすめ返信】\n英: Haha, same here! 😊  \n日: はは、こちらこそです！😊",
+      "timestamp": 1782569729277,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "8673f23e-2def-43d1-b3ad-d2b8565fff9a",
+      "speaker": "user",
+      "channel": "friend",
+      "content": "Haha, same here! 😊",
+      "timestamp": 1782569740259,
+      "translationJa": "ははは、私もです！😊",
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    },
+    {
+      "id": "f5396148-7726-47ed-9ded-687184d2617e",
+      "speaker": "buddy",
+      "channel": "buddy",
+      "content": "完璧！「Haha, same here! 😊」は自然で、軽やかで親しみやすい英語です。  \n笑いを含めて相手の気持ちに共感する表現として、とても効果的ですよ！",
+      "timestamp": 1782569741883,
+      "translationJa": null,
+      "recommendedReplyEn": null,
+      "recommendedReplyJa": null
+    }
+  ]
+}
