@@ -3,7 +3,11 @@ from pathlib import Path
 
 
 def _repo_root() -> Path:
-    return Path(__file__).resolve().parents[2]
+    src_dir = Path(__file__).resolve().parent
+    task_root = src_dir.parent
+    if (task_root / "assets").is_dir() or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+        return task_root
+    return task_root.parent
 
 
 def _resolve_assets_dir(env_key: str, default_relative: str) -> Path:
