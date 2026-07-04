@@ -2,7 +2,7 @@ version = 0.1
 
 [default.deploy.parameters]
 stack_name = "buddy-talk-staging"
-resolve_s3 = true
+s3_bucket = "reticle-staging-sam-artifacts"
 s3_prefix = "buddy-talk-staging"
 region = "ap-northeast-1"
 confirm_changeset = false
