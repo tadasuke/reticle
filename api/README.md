@@ -30,6 +30,8 @@ cd api && source .venv/bin/activate && python ../scripts/init_dynamodb_local.py
 uvicorn local_server:app --reload --port 8000
 ```
 
+Admin entry: `http://localhost:5173/admin`. User management: `http://localhost:5173/admin/users`.
+
 Admin character image studio: `http://localhost:5173/admin/character-images` (local only, not on Lambda).
 
 ## API
@@ -40,9 +42,9 @@ Admin character image studio: `http://localhost:5173/admin/character-images` (lo
 { "userId": "tanaka" }
 ```
 
-Response: `{ "user": { "userId", "createdAt", "lastLoginAt" }, "isNew": true }`
+Response: `{ "user": { "userId", "createdAt", "lastLoginAt", "aiTokenBalance", "aiTokensUsed" } }`
 
-userId: 3–32 chars, `[a-zA-Z0-9_-]` only. Creates user if not exists.
+userId: 3–32 chars, `[a-zA-Z0-9_-]` only. **Must be registered via admin** (`POST /admin/users`). Unregistered IDs return **404** with `{ "detail": "登録されていないユーザー ID です" }`.
 
 ### User AI conversations
 
@@ -94,6 +96,28 @@ All endpoints below require header `X-User-Id` matching path `{userId}`.
 
 Response: `{ "text": "..." }`
 
+### Admin users
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/admin/users` | List users (`userId`, `lastLoginAt`, `aiTokenBalance`), sorted by `lastLoginAt` desc |
+| POST | `/admin/users` | Create user `{ userId, initialTokens }` |
+| GET | `/admin/users/{userId}` | User detail including `createdAt`, `aiTokensUsed`, `conversationCount` |
+| POST | `/admin/users/{userId}/token-grants` | Grant tokens `{ tokens }` (min 1) |
+| DELETE | `/admin/users/{userId}` | Delete user and all related data (profile, conversations, ledger) |
+
+No authentication header required (same as other admin routes). List uses DynamoDB Scan on `SK = PROFILE`. For large user counts, consider adding a GSI on `lastLoginAt`.
+
+### Clear all user data (develop)
+
+Before switching to admin-only registration, wipe existing user records:
+
+```bash
+cd api && source .venv/bin/activate
+python ../scripts/clear_all_user_data.py --dry-run
+python ../scripts/clear_all_user_data.py
+```
+
 ### Admin character images (local only)
 
 | Method | Path | Purpose |
@@ -114,7 +138,28 @@ Entry point: `src.handler.lambda_handler`
 
 Deploy to API Gateway (HTTP API) with proxy integration. Set `DASHSCOPE_API_KEY` as a Lambda environment variable.
 
-**Note:** Lambda currently handles `POST /conversation` only. User / AI conversation endpoints are implemented in `local_server.py` and require API Gateway route expansion for staging/product.
+**Note:** Lambda handles `POST /conversation`, `POST /users/login`, and admin user routes below. Other user / AI conversation / character admin endpoints are implemented in `local_server.py` and require API Gateway route expansion for staging/product.
+
+### Lambda routes (implemented in code)
+
+| Method | Path |
+|--------|------|
+| POST | `/conversation` |
+| POST | `/users/login` |
+| GET | `/admin/users` |
+| POST | `/admin/users` |
+| GET | `/admin/users/{userId}` |
+| POST | `/admin/users/{userId}/token-grants` |
+| DELETE | `/admin/users/{userId}` |
+
+To deploy admin user APIs to staging/product:
+
+1. Add the routes above to API Gateway (HTTP API) with Lambda proxy integration.
+2. Update CORS `Allow-Methods` to include `GET`, `POST`, `DELETE`.
+3. Set Lambda env vars: `DYNAMODB_TABLE_NAME`, `AWS_REGION` (no `DYNAMODB_ENDPOINT`).
+4. Ensure the Lambda execution role can `dynamodb:Scan`, `dynamodb:Query`, `dynamodb:TransactWriteItems`, and `dynamodb:BatchWriteItem` on the `buddy-talk` table.
+
+User / AI conversation endpoints still require separate route expansion.
 
 ## DynamoDB
 
@@ -123,7 +168,7 @@ Table name: `buddy-talk` (env: `DYNAMODB_TABLE_NAME`)
 | PK | SK | Purpose |
 |----|-----|---------|
 | `USER#{userId}` | `PROFILE` | User profile |
-| `USER#{userId}` | `CONV#{conversationId}` | AI conversation metadata + `messages[]` |
+| `USER#{userId}` | `CONV#{conversationId}` | AI conversation metadata (`threadIndex`, `threadLabel`, `friendTypeId`, …) + `messages[]` |
 
 Billing: PAY_PER_REQUEST
 

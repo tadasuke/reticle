@@ -7,7 +7,7 @@ import { useAuth } from './hooks/useAuth';
 import { useConversation } from './hooks/useConversation';
 
 export default function App() {
-  const { user, isLoggedIn, loading: authLoading, error: authError, login, logout, clearError: clearAuthError } =
+  const { user, isLoggedIn, loading: authLoading, error: authError, login, logout, updateAiTokenBalance, refreshUserProfile, clearError: clearAuthError } =
     useAuth();
   const {
     conversations,
@@ -29,6 +29,7 @@ export default function App() {
     supportType,
     setSupportType,
     setBuddyType,
+    threadLabel,
     messages,
     loading,
     friendTyping,
@@ -45,6 +46,7 @@ export default function App() {
   } = useConversation({
     userId: user?.userId ?? null,
     onMessagesPersisted: handleMessagesPersisted,
+    onAiTokenBalanceUpdated: updateAiTokenBalance,
   });
 
   const handleLogin = useCallback(
@@ -74,17 +76,16 @@ export default function App() {
     return (
       <AiConversationHome
         userId={user.userId}
+        aiTokenBalance={user.aiTokenBalance}
+        aiTokensUsed={user.aiTokensUsed}
+        onRefreshUserProfile={refreshUserProfile}
         conversations={conversations}
         loadingConversations={conversationsLoading || resuming}
         conversationsError={conversationsError}
         onRefreshConversations={refreshConversations}
         onDismissConversationsError={clearConversationsError}
-        onSelectConversation={(conversationId) => {
-          void resumeConversation(conversationId);
-        }}
-        onStartScenario={(options) => {
-          void startScenario(options);
-        }}
+        onSelectConversation={async (conversationId) => resumeConversation(conversationId)}
+        onStartScenario={async (options) => startScenario(options)}
         isStartingScenario={isStartingScenario}
         startError={error}
         onDismissStartError={clearError}
@@ -98,6 +99,7 @@ export default function App() {
       scenario={scenario}
       friendType={friendType}
       buddyType={buddyType}
+      threadLabel={threadLabel}
       buddyTypes={buddyTypes}
       onBuddyTypeChange={setBuddyType}
       buddyTypeChangeDisabled={loading.friend || loading.buddy || friendTyping}
@@ -110,6 +112,7 @@ export default function App() {
       onSendToFriend={sendToFriend}
       onSendToBuddy={sendToBuddy}
       onRewindFriendTo={rewindFriendTo}
+      aiTokenBalance={user.aiTokenBalance}
       onBack={resetScenario}
       onDismissError={clearError}
     />

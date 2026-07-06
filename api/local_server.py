@@ -3,12 +3,12 @@ import os
 from typing import Any, Literal
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, File, Header, HTTPException, UploadFile
+from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from src.assets_paths import get_buddies_root, get_friends_root, get_images_root, get_real_friends_root
+from src.assets_paths import get_buddies_root, get_friends_root, get_images_root
 from src.character_image_studio.handler import (
     adopt_reference,
     create_new_character,
@@ -29,7 +29,30 @@ from src.ai_conversations.handler import (
     patch_user_conversation,
     put_user_conversation_messages,
 )
-from src.users.handler import InvalidUserIdError, login_user, normalize_user_id
+from src.usage import total_tokens_from_usage
+from src.users.handler import (
+    InvalidUserIdError,
+    UserNotFoundError as LoginUserNotFoundError,
+    get_user_profile,
+    login_user,
+    normalize_user_id,
+)
+from src.admin_users.handler import (
+    InvalidTokenAmountError,
+    UserAlreadyExistsError,
+    UserNotFoundError,
+    create_user,
+    delete_user,
+    get_user_detail,
+    grant_user_tokens,
+    list_users,
+)
+from src.token_ledger.handler import (
+    InsufficientTokenBalanceError,
+    consume_user_tokens,
+    list_user_token_ledger,
+    require_positive_token_balance,
+)
 from src.buddy_characters.handler import list_buddy_types
 from src.friend_characters.handler import (
     create_friend_type,
@@ -37,19 +60,6 @@ from src.friend_characters.handler import (
     get_friend_type_detail,
     list_friend_types,
     update_friend_type,
-)
-from src.real_friends.handler import (
-    create_real_friend,
-    delete_real_friend,
-    delete_real_friend_photo,
-    get_real_friend_detail,
-    get_real_friend_messages,
-    get_real_friend_photos,
-    list_real_friends,
-    put_real_friend_messages,
-    set_real_friend_default_photo,
-    update_real_friend,
-    upload_real_friend_photo,
 )
 
 load_dotenv()
@@ -72,15 +82,12 @@ app.add_middleware(
 friends_root = get_friends_root()
 buddies_root = get_buddies_root()
 images_root = get_images_root()
-real_friends_root = get_real_friends_root()
 friends_root.mkdir(parents=True, exist_ok=True)
 buddies_root.mkdir(parents=True, exist_ok=True)
 images_root.mkdir(parents=True, exist_ok=True)
-real_friends_root.mkdir(parents=True, exist_ok=True)
 app.mount("/media/friends", StaticFiles(directory=str(friends_root)), name="friend-assets")
 app.mount("/media/buddies", StaticFiles(directory=str(buddies_root)), name="buddy-assets")
 app.mount("/media/images", StaticFiles(directory=str(images_root)), name="image-assets")
-app.mount("/media/real-friends", StaticFiles(directory=str(real_friends_root)), name="real-friend-assets")
 
 
 class MessagePayload(BaseModel):
@@ -89,23 +96,19 @@ class MessagePayload(BaseModel):
     channel: Literal["friend", "buddy"]
     content: str
     timestamp: int
-    translationJa: str | None = None
-    recommendedReplyEn: str | None = None
-    recommendedReplyJa: str | None = None
 
 
 class ConversationRequest(BaseModel):
     type: Literal["opening", "message"]
-    conversationMode: Literal["ai", "real"] = "ai"
     scenarioId: Literal["casual", "cafe", "bar", "sns"] = "sns"
     friendType: str | None = None
-    realFriendId: str | None = None
     buddyType: str = DEFAULT_BUDDY_TYPE
     aiModel: Literal["qwen", "claude"] = "qwen"
     character: Literal["friend", "buddy"] | None = None
     mode: Literal["consult", "feedback", "support", "translate"] | None = None
     englishText: str | None = None
     messages: list[MessagePayload] | None = Field(default=None)
+    conversationId: str | None = None
 
 
 class SpecUpdateRequest(BaseModel):
@@ -163,37 +166,17 @@ class FriendTypeUpdateRequest(BaseModel):
     enabled: bool = True
 
 
-class RealFriendCreateRequest(BaseModel):
-    id: str | None = None
-    label: str
-    age: int = Field(ge=1, le=120)
-    nationality: str = ""
-    gender: str = ""
-    sourceApp: str = ""
-    bio: str = ""
-    notes: str = ""
-
-
-class RealFriendUpdateRequest(BaseModel):
-    label: str
-    age: int = Field(ge=1, le=120)
-    nationality: str = ""
-    gender: str = ""
-    sourceApp: str = ""
-    bio: str = ""
-    notes: str = ""
-
-
-class RealFriendMessagesRequest(BaseModel):
-    messages: list[MessagePayload]
-
-
-class RealFriendDefaultPhotoRequest(BaseModel):
-    photoId: str
-
-
 class UserLoginRequest(BaseModel):
     userId: str
+
+
+class AdminUserCreateRequest(BaseModel):
+    userId: str = Field(min_length=1)
+    initialTokens: int = Field(ge=0)
+
+
+class AdminTokenGrantRequest(BaseModel):
+    tokens: int = Field(ge=1)
 
 
 class AiConversationCreateRequest(BaseModel):
@@ -230,6 +213,15 @@ def require_matching_user(user_id: str, x_user_id: str | None) -> str:
     return normalized_path
 
 
+def infer_token_request_kind(request: ConversationRequest) -> str:
+    if request.type == "opening":
+        return "friend_opening"
+    if request.character == "friend":
+        return "friend_reply"
+    mode = request.mode or "consult"
+    return f"buddy_{mode}"
+
+
 @app.get("/friend-types")
 def public_list_friend_types() -> dict[str, Any]:
     return {"friendTypes": list_friend_types(include_disabled=False)}
@@ -242,12 +234,62 @@ def public_list_buddy_types() -> dict[str, Any]:
 
 @app.post("/users/login")
 def public_login_user(request: UserLoginRequest) -> dict[str, Any]:
+    # #region agent log
+    import json, time
     try:
-        return login_user(user_id=request.userId)
+        with open("/Users/tadasuke/Documents/19_cursor/04_reticle/.cursor/debug-fe457c.log", "a") as _f:
+            _f.write(json.dumps({"sessionId":"fe457c","location":"local_server.py:public_login_user:entry","message":"login endpoint hit","data":{"userIdLength":len(request.userId)},"timestamp":int(time.time()*1000),"hypothesisId":"A"}) + "\n")
+    except Exception:
+        pass
+    # #endregion
+    try:
+        result = login_user(user_id=request.userId)
+        return result
     except InvalidUserIdError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except LoginUserNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="登録されていないユーザー ID です") from exc
     except Exception as exc:
+        # #region agent log
+        try:
+            with open("/Users/tadasuke/Documents/19_cursor/04_reticle/.cursor/debug-fe457c.log", "a") as _f:
+                _f.write(json.dumps({"sessionId":"fe457c","location":"local_server.py:public_login_user:error","message":"login failed with exception","data":{"errorType":type(exc).__name__,"errorMessage":str(exc)},"timestamp":int(time.time()*1000),"hypothesisId":"D"}) + "\n")
+        except Exception:
+            pass
+        # #endregion
         logger.exception("Unhandled error in user login")
+        raise HTTPException(status_code=500, detail="Internal server error") from exc
+
+
+@app.get("/users/{user_id}")
+def public_get_user(
+    user_id: str,
+    x_user_id: str | None = Header(default=None, alias="X-User-Id"),
+) -> dict[str, Any]:
+    normalized = require_matching_user(user_id, x_user_id)
+    try:
+        return get_user_profile(user_id=normalized)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.exception("Unhandled error getting user profile")
+        raise HTTPException(status_code=500, detail="Internal server error") from exc
+
+
+@app.get("/users/{user_id}/token-ledger")
+def public_list_token_ledger(
+    user_id: str,
+    limit: int = 50,
+    cursor: str | None = None,
+    x_user_id: str | None = Header(default=None, alias="X-User-Id"),
+) -> dict[str, Any]:
+    normalized = require_matching_user(user_id, x_user_id)
+    try:
+        return list_user_token_ledger(user_id=normalized, limit=limit, cursor=cursor)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.exception("Unhandled error listing token ledger")
         raise HTTPException(status_code=500, detail="Internal server error") from exc
 
 
@@ -352,20 +394,35 @@ def public_patch_ai_conversation(
 
 
 @app.post("/conversation")
-def conversation(request: ConversationRequest) -> dict[str, Any]:
-    if request.conversationMode == "ai":
-        if not request.friendType:
-            raise HTTPException(status_code=400, detail="friendType is required for AI mode")
-        valid_friend = is_valid_friend_type(request.friendType)
-        if not valid_friend:
-            raise HTTPException(status_code=400, detail=f"Unknown friendType: {request.friendType}")
+def conversation(
+    request: ConversationRequest,
+    x_user_id: str | None = Header(default=None, alias="X-User-Id"),
+    x_idempotency_key: str | None = Header(default=None, alias="X-Idempotency-Key"),
+) -> dict[str, Any]:
+    if not request.friendType:
+        raise HTTPException(status_code=400, detail="friendType is required")
+    valid_friend = is_valid_friend_type(request.friendType)
+    if not valid_friend:
+        raise HTTPException(status_code=400, detail=f"Unknown friendType: {request.friendType}")
     if not is_valid_buddy_type(request.buddyType):
         raise HTTPException(status_code=400, detail=f"Unknown buddyType: {request.buddyType}")
+
+    normalized_user_id: str | None = None
+    if x_user_id:
+        try:
+            normalized_user_id = normalize_user_id(x_user_id)
+        except InvalidUserIdError as exc:
+            raise HTTPException(status_code=401, detail=str(exc)) from exc
+
+        try:
+            require_positive_token_balance(user_id=normalized_user_id)
+        except InsufficientTokenBalanceError as exc:
+            raise HTTPException(status_code=402, detail=str(exc)) from exc
 
     body: dict[str, Any] = request.model_dump(exclude_none=True)
 
     try:
-        return handle_conversation_request(body)
+        result = handle_conversation_request(body)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except RuntimeError as exc:
@@ -374,120 +431,31 @@ def conversation(request: ConversationRequest) -> dict[str, Any]:
         logger.exception("Unhandled error in conversation handler")
         raise HTTPException(status_code=500, detail="Internal server error") from exc
 
+    if normalized_user_id:
+        usage = result.get("usage")
+        if isinstance(usage, dict):
+            tokens = total_tokens_from_usage(usage)
+            if not x_idempotency_key:
+                raise HTTPException(status_code=400, detail="X-Idempotency-Key header is required")
+            source: dict[str, Any] = {
+                "conversationMode": "ai",
+                "requestKind": infer_token_request_kind(request),
+                "friendTypeId": request.friendType,
+                "buddyTypeId": request.buddyType,
+            }
+            if request.conversationId:
+                source["conversationId"] = request.conversationId
+            ai_token_balance = consume_user_tokens(
+                user_id=normalized_user_id,
+                amount=tokens,
+                idempotency_key=x_idempotency_key,
+                usage=usage,
+                source=source,
+            )
+            if ai_token_balance is not None:
+                result = {**result, "aiTokenBalance": ai_token_balance}
 
-@app.get("/real-friends")
-def public_list_real_friends() -> dict[str, Any]:
-    return {"realFriends": list_real_friends()}
-
-
-@app.post("/real-friends")
-def public_create_real_friend(request: RealFriendCreateRequest) -> dict[str, Any]:
-    try:
-        return create_real_friend(
-            friend_id=request.id,
-            label=request.label,
-            age=request.age,
-            nationality=request.nationality,
-            gender=request.gender,
-            source_app=request.sourceApp,
-            bio=request.bio,
-            notes=request.notes,
-        )
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-
-
-@app.get("/real-friends/{friend_id}")
-def public_get_real_friend(friend_id: str) -> dict[str, Any]:
-    try:
-        return get_real_friend_detail(friend_id)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-
-
-@app.put("/real-friends/{friend_id}")
-def public_update_real_friend(friend_id: str, request: RealFriendUpdateRequest) -> dict[str, Any]:
-    try:
-        return update_real_friend(
-            friend_id,
-            label=request.label,
-            age=request.age,
-            nationality=request.nationality,
-            gender=request.gender,
-            source_app=request.sourceApp,
-            bio=request.bio,
-            notes=request.notes,
-        )
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-
-
-@app.delete("/real-friends/{friend_id}")
-def public_delete_real_friend(friend_id: str) -> dict[str, Any]:
-    try:
-        delete_real_friend(friend_id)
-        return {"ok": True}
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-
-
-@app.get("/real-friends/{friend_id}/messages")
-def public_get_real_friend_messages(friend_id: str) -> dict[str, Any]:
-    try:
-        return get_real_friend_messages(friend_id)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-
-
-@app.put("/real-friends/{friend_id}/messages")
-def public_put_real_friend_messages(friend_id: str, request: RealFriendMessagesRequest) -> dict[str, Any]:
-    try:
-        return put_real_friend_messages(
-            friend_id,
-            [message.model_dump() for message in request.messages],
-        )
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-
-
-@app.get("/real-friends/{friend_id}/photos")
-def public_get_real_friend_photos(friend_id: str) -> dict[str, Any]:
-    try:
-        return get_real_friend_photos(friend_id)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-
-
-@app.post("/real-friends/{friend_id}/photos")
-async def public_upload_real_friend_photo(
-    friend_id: str,
-    file: UploadFile = File(...),
-) -> dict[str, Any]:
-    try:
-        content = await file.read()
-        content_type = file.content_type or "application/octet-stream"
-        return upload_real_friend_photo(friend_id, content, content_type)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-
-
-@app.put("/real-friends/{friend_id}/photos/default")
-def public_set_real_friend_default_photo(
-    friend_id: str,
-    request: RealFriendDefaultPhotoRequest,
-) -> dict[str, Any]:
-    try:
-        return set_real_friend_default_photo(friend_id, request.photoId)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-
-
-@app.delete("/real-friends/{friend_id}/photos/{photo_id}")
-def public_delete_real_friend_photo(friend_id: str, photo_id: str) -> dict[str, Any]:
-    try:
-        return delete_real_friend_photo(friend_id, photo_id)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return result
 
 
 @app.get("/admin/characters")
@@ -573,6 +541,69 @@ def admin_adopt(character_id: str, request: AdoptRequest) -> dict[str, Any]:
         return {"reference": reference}
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.get("/admin/users")
+def admin_list_users() -> dict[str, Any]:
+    try:
+        return list_users()
+    except Exception as exc:
+        logger.exception("Unhandled error listing admin users")
+        raise HTTPException(status_code=500, detail="Internal server error") from exc
+
+
+@app.get("/admin/users/{user_id}")
+def admin_get_user(user_id: str) -> dict[str, Any]:
+    try:
+        return get_user_detail(user_id)
+    except UserNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.exception("Unhandled error getting admin user detail")
+        raise HTTPException(status_code=500, detail="Internal server error") from exc
+
+
+@app.post("/admin/users")
+def admin_create_user(request: AdminUserCreateRequest) -> dict[str, Any]:
+    try:
+        return create_user(user_id=request.userId, initial_tokens=request.initialTokens)
+    except InvalidUserIdError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except InvalidTokenAmountError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except UserAlreadyExistsError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.exception("Unhandled error creating admin user")
+        raise HTTPException(status_code=500, detail="Internal server error") from exc
+
+
+@app.post("/admin/users/{user_id}/token-grants")
+def admin_grant_user_tokens(user_id: str, request: AdminTokenGrantRequest) -> dict[str, Any]:
+    try:
+        return grant_user_tokens(user_id=user_id, tokens=request.tokens)
+    except InvalidUserIdError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except InvalidTokenAmountError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except UserNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.exception("Unhandled error granting admin user tokens")
+        raise HTTPException(status_code=500, detail="Internal server error") from exc
+
+
+@app.delete("/admin/users/{user_id}")
+def admin_delete_user(user_id: str) -> dict[str, Any]:
+    try:
+        return delete_user(user_id)
+    except InvalidUserIdError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except UserNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.exception("Unhandled error deleting admin user")
+        raise HTTPException(status_code=500, detail="Internal server error") from exc
 
 
 @app.get("/admin/friend-types")

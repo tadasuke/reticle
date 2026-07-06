@@ -11,12 +11,12 @@ type BuddyPanelProps = {
   buddyTypeChangeDisabled?: boolean;
   supportType: BuddySupportType;
   onSupportTypeChange?: (type: BuddySupportType) => void;
-  supportTypeFixed?: boolean;
   messages: Message[];
   isLoading: boolean;
   onSend: (content: string) => void;
   inputRef?: RefObject<HTMLTextAreaElement | null>;
   peerInputRef?: RefObject<HTMLTextAreaElement | null>;
+  inputDisabled?: boolean;
 };
 
 export function BuddyPanel({
@@ -26,12 +26,12 @@ export function BuddyPanel({
   buddyTypeChangeDisabled = false,
   supportType,
   onSupportTypeChange,
-  supportTypeFixed = false,
   messages,
   isLoading,
   onSend,
   inputRef: inputRefProp,
   peerInputRef,
+  inputDisabled = false,
 }: BuddyPanelProps) {
   const displayName = buddyType?.label ?? 'チサト';
   const subtitle = buddyType?.subtitle ?? '困ったら日本語で相談できます';
@@ -87,32 +87,26 @@ export function BuddyPanel({
 
         <div className="mt-3">
           <p className="mb-1.5 text-xs font-medium text-emerald-800">サポートタイプ</p>
-          {supportTypeFixed ? (
-            <p className="rounded-lg border border-emerald-200 bg-white px-3 py-2 text-xs text-emerald-800">
-              High（固定）
-            </p>
-          ) : (
-            <div className="flex gap-1 rounded-lg border border-emerald-200 bg-white p-1">
-              {BUDDY_SUPPORT_TYPES.map((option) => {
-                const selected = supportType === option.id;
-                return (
-                  <button
-                    key={option.id}
-                    type="button"
-                    onClick={() => onSupportTypeChange?.(option.id)}
-                    className={`flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition-colors ${
-                      selected
-                        ? 'bg-emerald-600 text-white'
-                        : 'text-emerald-800 hover:bg-emerald-50'
-                    }`}
-                    title={option.description}
-                  >
-                    {option.label}
-                  </button>
-                );
-              })}
-            </div>
-          )}
+          <div className="flex gap-1 rounded-lg border border-emerald-200 bg-white p-1">
+            {BUDDY_SUPPORT_TYPES.map((option) => {
+              const selected = supportType === option.id;
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => onSupportTypeChange?.(option.id)}
+                  className={`flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition-colors ${
+                    selected
+                      ? 'bg-emerald-600 text-white'
+                      : 'text-emerald-800 hover:bg-emerald-50'
+                  }`}
+                  title={option.description}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
           <p className="mt-1.5 text-xs text-emerald-600">{supportOption.description}</p>
         </div>
       </header>
@@ -131,7 +125,7 @@ export function BuddyPanel({
           peerInputRef={peerInputRef}
           placeholder="日本語で相談..."
           onSend={handleSend}
-          disabled={isLoading}
+          disabled={isLoading || inputDisabled}
           buttonLabel="相談"
         />
       </div>

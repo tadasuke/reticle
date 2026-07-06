@@ -11,6 +11,7 @@ import {
   sendCoachFeedback,
   sendMessage,
 } from '../lib/apiClient';
+import { totalTokensFromUsage } from '../lib/usageTotals';
 import { getLastAiFriendMessage, isBuddyTranslationRequest } from '../lib/buddyTranslationRequest';
 import { calculateTypingDelay } from '../lib/typingDelay';
 import {
@@ -24,6 +25,7 @@ import type {
   BuddySupportType,
   BuddyType,
   BuddyTypeId,
+  ConversationResponse,
   FriendType,
   FriendTypeId,
   Message,
@@ -59,6 +61,7 @@ export type StartScenarioOptions = {
 type UseConversationOptions = {
   userId: string | null;
   onMessagesPersisted?: () => void;
+  onAiTokenBalanceUpdated?: (aiTokenBalance: number, tokensConsumed?: number) => void;
 };
 
 function includesMiddleFeedback(supportType: BuddySupportType): boolean {
@@ -66,7 +69,7 @@ function includesMiddleFeedback(supportType: BuddySupportType): boolean {
 }
 
 export function useConversation(options: UseConversationOptions) {
-  const { userId, onMessagesPersisted } = options;
+  const { userId, onMessagesPersisted, onAiTokenBalanceUpdated } = options;
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [scenarioId, setScenarioId] = useState<ScenarioId | null>(null);
   const [friendTypeId, setFriendTypeId] = useState<FriendTypeId>('');
@@ -76,6 +79,7 @@ export function useConversation(options: UseConversationOptions) {
   const [buddyTypes, setBuddyTypes] = useState<BuddyType[]>([]);
   const [supportType, setSupportTypeState] = useState<BuddySupportType>(DEFAULT_BUDDY_SUPPORT_TYPE);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [threadLabel, setThreadLabel] = useState<string | null>(null);
   const [loading, setLoading] = useState({ friend: false, buddy: false });
   const [resuming, setResuming] = useState(false);
   const [friendTyping, setFriendTyping] = useState(false);
@@ -88,10 +92,15 @@ export function useConversation(options: UseConversationOptions) {
   const userIdRef = useRef<string | null>(userId);
   const lastHighSupportFriendIdRef = useRef<string | null>(null);
   const onMessagesPersistedRef = useRef(onMessagesPersisted);
+  const onAiTokenBalanceUpdatedRef = useRef(onAiTokenBalanceUpdated);
 
   useEffect(() => {
     onMessagesPersistedRef.current = onMessagesPersisted;
   }, [onMessagesPersisted]);
+
+  useEffect(() => {
+    onAiTokenBalanceUpdatedRef.current = onAiTokenBalanceUpdated;
+  }, [onAiTokenBalanceUpdated]);
 
   useEffect(() => {
     userIdRef.current = userId;
@@ -122,6 +131,13 @@ export function useConversation(options: UseConversationOptions) {
     onMessagesPersistedRef.current?.();
   }, []);
 
+  const applyAiTokenBalanceUpdate = useCallback((response: ConversationResponse) => {
+    if (typeof response.aiTokenBalance === 'number') {
+      const tokensConsumed = response.usage ? totalTokensFromUsage(response.usage) : undefined;
+      onAiTokenBalanceUpdatedRef.current?.(response.aiTokenBalance, tokensConsumed);
+    }
+  }, []);
+
   const clearFriendTypingTimeout = useCallback(() => {
     if (friendTypingTimeoutRef.current) {
       clearTimeout(friendTypingTimeoutRef.current);
@@ -144,7 +160,10 @@ export function useConversation(options: UseConversationOptions) {
           friendTypeId,
           buddyTypeId,
           DEFAULT_AI_MODEL,
+          userIdRef.current ?? undefined,
+          conversationIdRef.current ?? undefined,
         );
+        applyAiTokenBalanceUpdate(support);
         const updated = [
           ...messagesRef.current,
           createMessage('buddy', 'buddy', support.text, support.usage),
@@ -160,7 +179,7 @@ export function useConversation(options: UseConversationOptions) {
         setLoading((prev) => ({ ...prev, buddy: false }));
       }
     },
-    [scenarioId, friendTypeId, buddyTypeId, persistMessages],
+    [scenarioId, friendTypeId, buddyTypeId, persistMessages, applyAiTokenBalanceUpdate],
   );
 
   const revealFriendReply = useCallback(
@@ -192,15 +211,15 @@ export function useConversation(options: UseConversationOptions) {
   const buddyType = selectedBuddyType;
   const isStartingScenario = loading.friend && !scenarioId && !resuming;
 
-  const startScenario = useCallback(async (startOptions: StartScenarioOptions) => {
+  const startScenario = useCallback(async (startOptions: StartScenarioOptions): Promise<boolean> => {
     const activeUserId = userIdRef.current;
     if (!activeUserId) {
       setError('ログインが必要です。');
-      return;
+      return false;
     }
 
     const selected = getScenarioById(startOptions.scenarioId);
-    if (!selected) return;
+    if (!selected) return false;
 
     const initialSupportType = startOptions.supportType ?? DEFAULT_BUDDY_SUPPORT_TYPE;
 
@@ -209,6 +228,7 @@ export function useConversation(options: UseConversationOptions) {
     supportTypeRef.current = initialSupportType;
     lastHighSupportFriendIdRef.current = null;
     messagesRef.current = [];
+    setThreadLabel(null);
     setError(null);
     setLoading({ friend: true, buddy: false });
 
@@ -226,6 +246,7 @@ export function useConversation(options: UseConversationOptions) {
       setBuddyTypes(fetchedBuddyTypes);
       setConversationId(created.conversationId);
       conversationIdRef.current = created.conversationId;
+      setThreadLabel(created.threadLabel);
       setScenarioId(startOptions.scenarioId);
       setFriendTypeId(startOptions.friendTypeId);
       setSelectedFriendType(startOptions.friendType);
@@ -238,22 +259,36 @@ export function useConversation(options: UseConversationOptions) {
         startOptions.friendTypeId,
         startOptions.buddyTypeId,
         DEFAULT_AI_MODEL,
+        activeUserId,
+        created.conversationId,
       );
+      applyAiTokenBalanceUpdate(opening);
       revealFriendReply(opening.text, opening.usage);
+      return true;
     } catch (e) {
       setConversationId(null);
       conversationIdRef.current = null;
+      setThreadLabel(null);
+      setScenarioId(null);
+      setFriendTypeId('');
+      setSelectedFriendType(undefined);
+      setBuddyTypeId('');
+      buddyTypeIdRef.current = '';
+      setSelectedBuddyType(undefined);
+      setMessages([]);
+      messagesRef.current = [];
       setError(e instanceof Error ? e.message : '会話の開始に失敗しました。');
+      return false;
     } finally {
       setLoading({ friend: false, buddy: false });
     }
-  }, [revealFriendReply]);
+  }, [revealFriendReply, applyAiTokenBalanceUpdate]);
 
-  const resumeConversation = useCallback(async (targetConversationId: string) => {
+  const resumeConversation = useCallback(async (targetConversationId: string): Promise<boolean> => {
     const activeUserId = userIdRef.current;
     if (!activeUserId) {
       setError('ログインが必要です。');
-      return;
+      return false;
     }
 
     setResuming(true);
@@ -272,9 +307,13 @@ export function useConversation(options: UseConversationOptions) {
       if (!friendTypeMatch || !buddyTypeMatch) {
         throw new Error('会話に紐づくキャラクターが見つかりません。');
       }
+      if (!getScenarioById(detail.scenarioId)) {
+        throw new Error('この会話のシナリオは現在サポートされていません。');
+      }
 
       setConversationId(detail.conversationId);
       conversationIdRef.current = detail.conversationId;
+      setThreadLabel(detail.threadLabel);
       setScenarioId(detail.scenarioId);
       setFriendTypeId(detail.friendTypeId);
       setSelectedFriendType(friendTypeMatch);
@@ -287,8 +326,10 @@ export function useConversation(options: UseConversationOptions) {
       setMessages(detail.messages);
       messagesRef.current = detail.messages;
       lastHighSupportFriendIdRef.current = null;
+      return true;
     } catch (e) {
       setError(e instanceof Error ? e.message : '会話の再開に失敗しました。');
+      return false;
     } finally {
       setResuming(false);
       setLoading({ friend: false, buddy: false });
@@ -310,13 +351,33 @@ export function useConversation(options: UseConversationOptions) {
       setLoading((prev) => ({ ...prev, friend: true, buddy: withMiddleFeedback }));
 
       try {
+        const activeUserId = userIdRef.current ?? undefined;
+        const activeConversationId = conversationIdRef.current ?? undefined;
         if (withMiddleFeedback) {
           const [friendResult, feedbackResult] = await Promise.allSettled([
-            sendMessage('friend', scenarioId, nextMessages, friendTypeId, buddyTypeId, DEFAULT_AI_MODEL),
-            sendCoachFeedback(scenarioId, nextMessages, friendTypeId, buddyTypeId, DEFAULT_AI_MODEL),
+            sendMessage(
+              'friend',
+              scenarioId,
+              nextMessages,
+              friendTypeId,
+              buddyTypeId,
+              DEFAULT_AI_MODEL,
+              activeUserId,
+              activeConversationId,
+            ),
+            sendCoachFeedback(
+              scenarioId,
+              nextMessages,
+              friendTypeId,
+              buddyTypeId,
+              DEFAULT_AI_MODEL,
+              activeUserId,
+              activeConversationId,
+            ),
           ]);
 
           if (feedbackResult.status === 'fulfilled') {
+            applyAiTokenBalanceUpdate(feedbackResult.value);
             const withFeedback = [
               ...messagesRef.current,
               createMessage('buddy', 'buddy', feedbackResult.value.text, feedbackResult.value.usage),
@@ -327,6 +388,7 @@ export function useConversation(options: UseConversationOptions) {
           }
 
           if (friendResult.status === 'fulfilled') {
+            applyAiTokenBalanceUpdate(friendResult.value);
             revealFriendReply(friendResult.value.text, friendResult.value.usage);
           }
 
@@ -356,7 +418,10 @@ export function useConversation(options: UseConversationOptions) {
             friendTypeId,
             buddyTypeId,
             DEFAULT_AI_MODEL,
+            activeUserId,
+            activeConversationId,
           );
+          applyAiTokenBalanceUpdate(friendResult);
           await persistMessages(nextMessages);
           revealFriendReply(friendResult.text, friendResult.usage);
         }
@@ -381,6 +446,7 @@ export function useConversation(options: UseConversationOptions) {
       supportType,
       revealFriendReply,
       persistMessages,
+      applyAiTokenBalanceUpdate,
     ],
   );
 
@@ -400,6 +466,8 @@ export function useConversation(options: UseConversationOptions) {
       setLoading((prev) => ({ ...prev, buddy: true }));
 
       try {
+        const activeUserId = userIdRef.current ?? undefined;
+        const activeConversationId = conversationIdRef.current ?? undefined;
         if (isTranslationRequest) {
           if (!lastAiFriendMessage) {
             const updated = [
@@ -422,7 +490,10 @@ export function useConversation(options: UseConversationOptions) {
             buddyTypeId,
             lastAiFriendMessage.content,
             DEFAULT_AI_MODEL,
+            activeUserId,
+            activeConversationId,
           );
+          applyAiTokenBalanceUpdate(reply);
           const updated = [
             ...nextMessages,
             createMessage('buddy', 'buddy', reply.text, reply.usage),
@@ -440,7 +511,10 @@ export function useConversation(options: UseConversationOptions) {
           friendTypeId,
           buddyTypeId,
           DEFAULT_AI_MODEL,
+          activeUserId,
+          activeConversationId,
         );
+        applyAiTokenBalanceUpdate(reply);
         const updated = [
           ...nextMessages,
           createMessage('buddy', 'buddy', reply.text, reply.usage),
@@ -454,13 +528,14 @@ export function useConversation(options: UseConversationOptions) {
         setLoading((prev) => ({ ...prev, buddy: false }));
       }
     },
-    [scenario, scenarioId, messages, loading.buddy, friendTypeId, buddyTypeId, persistMessages],
+    [scenario, scenarioId, messages, loading.buddy, friendTypeId, buddyTypeId, persistMessages, applyAiTokenBalanceUpdate],
   );
 
   const resetScenario = useCallback(() => {
     clearFriendTypingTimeout();
     setConversationId(null);
     conversationIdRef.current = null;
+    setThreadLabel(null);
     setScenarioId(null);
     setFriendTypeId('');
     setSelectedFriendType(undefined);
@@ -548,6 +623,7 @@ export function useConversation(options: UseConversationOptions) {
     scenario,
     friendType,
     buddyType,
+    threadLabel,
     buddyTypes,
     supportType,
     setSupportType,

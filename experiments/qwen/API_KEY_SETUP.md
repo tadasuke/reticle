@@ -10,7 +10,7 @@
 | RAM ユーザー | `tadasuke.kato` |
 | リージョン | **Singapore（国際）** |
 | API エンドポイント | `https://dashscope-intl.aliyuncs.com/compatible-mode/v1` |
-| 使用モデル（会話用） | `qwen-plus` |
+| 使用モデル（会話用） | `qwen3.7-plus` |
 
 > 「Qwen3-MT Turbo」（`qwen-mt-turbo`）は**翻訳専用**のため、Reticle の会話には使いません。
 
@@ -83,7 +83,7 @@ cd experiments/qwen
 ```env
 DASHSCOPE_API_KEY=sk-xxxxxxxxxxxxxxxx
 QWEN_BASE_URL=https://dashscope-intl.aliyuncs.com/compatible-mode/v1
-QWEN_MODEL=qwen-plus
+QWEN_MODEL=qwen3.7-plus
 ```
 
 ---
@@ -101,7 +101,7 @@ pytest -v test_qwen_chat.py   # Reticle 想定の4ケース
 
 ```
 base_url: https://dashscope-intl.aliyuncs.com/compatible-mode/v1
-model:    qwen-plus
+model:    qwen3.7-plus
 ---
 reply: Qwen connection OK
 smoke test passed
@@ -116,7 +116,7 @@ smoke test passed
 | API Key メニューが見えない | RAM ユーザーに Model Studio 権限がない | 管理者に `AliyunBailianFullAccess` と API キー管理権限を依頼 |
 | Create API Key が押せない | ワークスペース管理者権限がない | 管理者がキーを作成して共有してもらう |
 | `401 invalid_api_key` | キー誤り / リージョン不一致 | Singapore 用キーか確認。`.env` の typo を確認 |
-| `403` / 権限エラー | モデル呼び出し権限不足 | Model Studio で `qwen-plus` が有効か確認 |
+| `403` / 権限エラー | モデル呼び出し権限不足 | Model Studio で `qwen3.7-plus` が有効か確認 |
 | 課金・クォータエラー | 有効化・支払い設定未完了 | 管理者に Model Studio 有効化と課金設定を依頼 |
 
 ---

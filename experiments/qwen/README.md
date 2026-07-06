@@ -1,6 +1,6 @@
 # Qwen (DashScope) 検証環境
 
-Reticle 本体のソースコードは変更せず、Alibaba Cloud Model Studio 経由で **Qwen チャットモデル**（`qwen-plus`）を使えるか検証するための独立環境です。
+Reticle 本体のソースコードは変更せず、Alibaba Cloud Model Studio 経由で **Qwen チャットモデル**（`qwen3.7-plus`）を使えるか検証するための独立環境です。
 
 ## 前提
 
@@ -9,10 +9,10 @@ Reticle 本体のソースコードは変更せず、Alibaba Cloud Model Studio 
 | クラウド | Alibaba Cloud（プロファイル `fod-short`） |
 | リージョン | **Singapore（国際）** |
 | エンドポイント | `https://dashscope-intl.aliyuncs.com/compatible-mode/v1` |
-| モデル | `qwen-plus` |
+| モデル | `qwen3.7-plus` |
 | 認証 | `DASHSCOPE_API_KEY`（Model Studio API キー） |
 
-> **補足**: 当初の「Qwen3-MT Turbo」は API 名 `qwen-mt-turbo` の**機械翻訳専用**モデルです。Reticle の AI フレンド / バディ会話にはチャットモデル（本環境では `qwen-plus`）を使います。
+> **補足**: 当初の「Qwen3-MT Turbo」は API 名 `qwen-mt-turbo` の**機械翻訳専用**モデルです。Reticle の AI フレンド / バディ会話にはチャットモデル（本環境では `qwen3.7-plus`）を使います。
 
 ## 1. Model Studio で API キーを作成する
 

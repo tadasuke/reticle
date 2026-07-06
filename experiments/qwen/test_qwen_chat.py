@@ -1,4 +1,4 @@
-"""Qwen (qwen-plus) 接続テスト。Reticle の会話フローに近いケースを検証する。"""
+"""Qwen (qwen3.7-plus) 接続テスト。Reticle の会話フローに近いケースを検証する。"""
 
 from __future__ import annotations
 

@@ -30,6 +30,6 @@ def load_config() -> QwenConfig:
         "QWEN_BASE_URL",
         "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
     ).strip()
-    model = os.environ.get("QWEN_MODEL", "qwen-plus").strip()
+    model = os.environ.get("QWEN_MODEL", "qwen3.7-plus").strip()
 
     return QwenConfig(api_key=api_key, base_url=base_url, model=model)

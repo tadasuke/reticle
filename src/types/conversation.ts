@@ -32,9 +32,6 @@ export type Message = {
   channel: MessageChannel;
   content: string;
   timestamp: number;
-  translationJa?: string;
-  recommendedReplyEn?: string;
-  recommendedReplyJa?: string;
   usage?: ApiUsage;
 };
 
@@ -57,6 +54,5 @@ export type ApiUsage = {
 export type ConversationResponse = {
   text: string;
   usage: ApiUsage;
-  recommendedReplyEn?: string;
-  recommendedReplyJa?: string;
+  aiTokenBalance?: number;
 };

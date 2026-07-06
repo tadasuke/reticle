@@ -3,7 +3,7 @@ name: coderabbit-review
 description: >-
   Reticle（バディートーク）プロジェクトで CodeRabbit CLI により未コミット変更をレビューし、
   指摘を日本語化して .cursor/reviews/ に Markdown ドキュメントとして保存する。
-  experiments/ ・ assets/real-friends/ 配下はレビュー対象外。修正は行わない。
+  experiments/ 配下はレビュー対象外。修正は行わない。
   ユーザーが CodeRabbit レビュー、レビュー結果の保存等を依頼したときに使う。
 disable-model-invocation: true
 ---
@@ -17,7 +17,7 @@ disable-model-invocation: true
 - **保存先**: `.cursor/reviews/coderabbit-YYYYMMDD-HHMMSS.md`
 - **指摘の言語**: 「内容」「修正方針」は**日本語**で記載する（STEP 3.5）
 - **修正は行わない**
-- **レビュー対象外**: `experiments/`、`assets/real-friends/` 配下（絶対にレビューしない）
+- **レビュー対象外**: `experiments/` 配下（絶対にレビューしない）
 
 > 機能実装・コミット時に自発的に CodeRabbit を実行しない。本スキル呼び出し時のみ実行する。
 
@@ -66,7 +66,7 @@ git diff --stat
 coderabbit --agent -t uncommitted --base develop
 ```
 
-- [`.coderabbit.yaml`](../../.coderabbit.yaml) の `path_filters` により `experiments/**`、`assets/real-friends/**` 等は CLI レビュー対象外
+- [`.coderabbit.yaml`](../../.coderabbit.yaml) の `path_filters` により `experiments/**` 等は CLI レビュー対象外
 - 完了まで待機する（変更量により 7〜30 分以上かかることがある）
 - npm パッケージとしてインストールしない（グローバル CLI を使用）
 - 失敗時は `coderabbit doctor` の結果を確認し、ユーザーに報告する
@@ -92,7 +92,7 @@ stdout を1行ずつ読み、`type: "finding"` のイベントを収集する。
 除外判定:
 
 ```python
-EXCLUDED_PREFIXES = ("experiments/", "assets/real-friends/")
+EXCLUDED_PREFIXES = ("experiments/",)
 if any(fileName.startswith(p) for p in EXCLUDED_PREFIXES):
     continue
 ```
@@ -158,7 +158,7 @@ STEP 3.5 で日本語化したテキストを使って Doc を組み立てる。
 | ブランチ | （git branch の結果） |
 | base ブランチ | develop |
 | 変更ファイル | （git diff --stat の概要） |
-| 除外パス | `experiments/**`, `assets/real-friends/**` 等（レビュー対象外） |
+| 除外パス | `experiments/**` 等（レビュー対象外） |
 
 ## サマリー
 

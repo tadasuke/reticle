@@ -6,6 +6,5 @@ reviews:
       - "develop"
   path_filters:
     - "!experiments/**"
-    - "!assets/real-friends/**"
     - "!api/.venv/**"
     - "!node_modules/**"

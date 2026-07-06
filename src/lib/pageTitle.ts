@@ -8,13 +8,17 @@ export function resolveAppPageTitle(pathname: string): string | undefined {
   if (pathname === '/' || pathname === '' || pathname.startsWith('/ai')) {
     return 'AIトップ画面';
   }
-  if (pathname.startsWith('/real')) {
-    return 'リアルモード';
-  }
   return undefined;
 }
 
 export function resolveAdminPageTitle(pathname: string): string | undefined {
+  const normalized = pathname.replace(/\/$/, '') || '/';
+  if (normalized === '/admin') {
+    return '管理画面';
+  }
+  if (pathname.startsWith('/admin/users')) {
+    return 'ユーザ管理';
+  }
   if (pathname.startsWith('/admin/buddy-characters')) {
     return 'バディー作成';
   }

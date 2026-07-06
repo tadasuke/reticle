@@ -22,7 +22,7 @@ export function useAiConversations(userId: string | null) {
     } catch (e) {
       const message = e instanceof Error ? e.message : '会話一覧の取得に失敗しました。';
       setError(message);
-      throw e;
+      return [];
     } finally {
       setLoading(false);
     }

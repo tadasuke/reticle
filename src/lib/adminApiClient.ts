@@ -10,6 +10,7 @@ import type {
   FriendCharacterInput,
   FriendCharacterListItem,
 } from '../types/friendCharacter';
+import type { AdminUserCreateInput, AdminUserDetail, AdminUserListItem, AdminTokenGrantInput } from '../types/adminUser';
 
 const REQUEST_TIMEOUT_MS = 120_000;
 
@@ -175,6 +176,44 @@ export async function updateFriendCharacter(
 
 export async function deleteFriendCharacter(friendId: string): Promise<void> {
   await adminFetch<{ ok: boolean }>(`/admin/friend-types/${friendId}`, {
+    method: 'DELETE',
+  });
+}
+
+export async function fetchAdminUsers(): Promise<AdminUserListItem[]> {
+  const data = await adminFetch<{ users: AdminUserListItem[] }>('/admin/users');
+  return data.users;
+}
+
+export async function fetchAdminUserDetail(userId: string): Promise<AdminUserDetail> {
+  const data = await adminFetch<{ user: AdminUserDetail }>(`/admin/users/${encodeURIComponent(userId)}`);
+  return data.user;
+}
+
+export async function createAdminUser(input: AdminUserCreateInput): Promise<AdminUserDetail> {
+  const data = await adminFetch<{ user: AdminUserDetail }>('/admin/users', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+  return data.user;
+}
+
+export async function grantAdminUserTokens(
+  userId: string,
+  input: AdminTokenGrantInput,
+): Promise<AdminUserDetail> {
+  const data = await adminFetch<{ user: AdminUserDetail }>(
+    `/admin/users/${encodeURIComponent(userId)}/token-grants`,
+    {
+      method: 'POST',
+      body: JSON.stringify(input),
+    },
+  );
+  return data.user;
+}
+
+export async function deleteAdminUser(userId: string): Promise<void> {
+  await adminFetch<{ ok: boolean }>(`/admin/users/${encodeURIComponent(userId)}`, {
     method: 'DELETE',
   });
 }

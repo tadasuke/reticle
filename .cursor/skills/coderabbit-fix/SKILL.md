@@ -3,7 +3,7 @@ name: coderabbit-fix
 description: >-
   Reticle（バディートーク）プロジェクトで CodeRabbit レビュー結果
   （.cursor/reviews/ の Markdown または coderabbit review findings）に基づき指摘を修正する。
-  experiments/ ・ assets/real-friends/ 配下は絶対に修正しない。再レビューは行わない。
+  experiments/ 配下は絶対に修正しない。再レビューは行わない。
   ユーザーがレビュー結果を元に修正、CodeRabbitの指摘を直して等を依頼したときに使う。
 disable-model-invocation: true
 ---
@@ -16,7 +16,7 @@ disable-model-invocation: true
 - **入力**: `.cursor/reviews/coderabbit-*.md` または `coderabbit review findings`
 - **修正後**: `npm run build`（および API 変更時は `compileall`）を実行し、Reticle 完了レポートを出力する
 - **再レビューは行わない**（ユーザーが `@coderabbit-review` を別途呼び出した場合のみ）
-- **修正禁止**: `experiments/`、`assets/real-friends/` 配下（絶対に修正しない）
+- **修正禁止**: `experiments/` 配下（絶対に修正しない）
 
 > 自発的に CodeRabbit を実行しない。本スキル呼び出し時のみ修正を行う。
 
@@ -59,7 +59,7 @@ coderabbit review findings
 - ファイルパスが除外プレフィックスで始まる指摘はスキップし、完了レポートの「スキップした指摘」に記載する
 
 ```python
-EXCLUDED_PREFIXES = ("experiments/", "assets/real-friends/")
+EXCLUDED_PREFIXES = ("experiments/",)
 if any(file_path.startswith(p) for p in EXCLUDED_PREFIXES):
     skip  # 絶対に修正しない
 ```

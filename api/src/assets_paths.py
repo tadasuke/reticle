@@ -26,7 +26,3 @@ def get_buddies_root() -> Path:
 
 def get_images_root() -> Path:
     return _resolve_assets_dir("IMAGE_ASSETS_DIR", "assets/images")
-
-
-def get_real_friends_root() -> Path:
-    return _resolve_assets_dir("REAL_FRIENDS_ASSETS_DIR", "assets/real-friends")

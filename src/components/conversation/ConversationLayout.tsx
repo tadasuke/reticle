@@ -10,6 +10,7 @@ type ConversationLayoutProps = {
   scenario: Scenario;
   friendType?: FriendType;
   buddyType?: BuddyType;
+  threadLabel?: string | null;
   buddyTypes?: BuddyType[];
   onBuddyTypeChange?: (id: string) => void;
   buddyTypeChangeDisabled?: boolean;
@@ -19,6 +20,7 @@ type ConversationLayoutProps = {
   loading: { friend: boolean; buddy: boolean };
   friendTyping?: boolean;
   error: string | null;
+  aiTokenBalance: number;
   onSendToFriend: (content: string) => void;
   onSendToBuddy: (content: string) => void;
   onRewindFriendTo: (messageId: string) => void;
@@ -39,6 +41,7 @@ export function ConversationLayout({
   loading,
   friendTyping = false,
   error,
+  aiTokenBalance,
   onSendToFriend,
   onSendToBuddy,
   onRewindFriendTo,
@@ -48,6 +51,7 @@ export function ConversationLayout({
   const friendInputRef = useRef<HTMLTextAreaElement>(null);
   const buddyInputRef = useRef<HTMLTextAreaElement>(null);
   const totalUsageTokens = useMemo(() => sumUsageFromMessages(messages), [messages]);
+  const tokensDepleted = aiTokenBalance <= 0;
 
   return (
     <div className="flex h-dvh flex-col bg-gray-50">
@@ -72,11 +76,19 @@ export function ConversationLayout({
               onClick={onBack}
               className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
             >
-              設定を変更
+              トップページに戻る
             </button>
           </div>
         </div>
       </header>
+
+      {tokensDepleted ? (
+        <div className="mx-auto w-full max-w-6xl shrink-0 px-4 pt-4">
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            AIトークンの残高がありません。メッセージの閲覧と巻き戻しはできますが、AI との新しいやり取りはできません。
+          </div>
+        </div>
+      ) : null}
 
       {error && (
         <div className="mx-auto w-full max-w-6xl shrink-0 px-4 pt-4">
@@ -94,6 +106,7 @@ export function ConversationLayout({
           onRewindTo={onRewindFriendTo}
           inputRef={friendInputRef}
           peerInputRef={buddyInputRef}
+          inputDisabled={tokensDepleted}
         />
         <BuddyPanel
           buddyType={buddyType}
@@ -107,6 +120,7 @@ export function ConversationLayout({
           onSend={onSendToBuddy}
           inputRef={buddyInputRef}
           peerInputRef={friendInputRef}
+          inputDisabled={tokensDepleted}
         />
       </main>
     </div>

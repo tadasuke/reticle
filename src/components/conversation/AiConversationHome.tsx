@@ -6,30 +6,31 @@ import { ErrorBanner } from '../common/ErrorBanner';
 import { LoadingIndicator } from '../common/LoadingIndicator';
 import { ScenarioSelect } from '../scenario/ScenarioSelect';
 import type { StartScenarioOptions } from '../../hooks/useConversation';
+import { AiConversationThreadTable } from './AiConversationThreadTable';
 
 type AiConversationHomeProps = {
   userId: string;
+  aiTokenBalance: number;
+  aiTokensUsed: number;
+  onRefreshUserProfile: () => Promise<void>;
   conversations: AiConversationListItem[];
   loadingConversations: boolean;
   conversationsError?: string | null;
   onRefreshConversations: () => Promise<unknown>;
   onDismissConversationsError?: () => void;
-  onSelectConversation: (conversationId: string) => void;
-  onStartScenario: (options: StartScenarioOptions) => void;
+  onSelectConversation: (conversationId: string) => Promise<boolean>;
+  onStartScenario: (options: StartScenarioOptions) => Promise<boolean>;
   isStartingScenario?: boolean;
   startError?: string | null;
   onDismissStartError?: () => void;
   onLogout: () => void;
 };
 
-function formatDateTime(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString('ja-JP');
-}
-
 export function AiConversationHome({
   userId,
+  aiTokenBalance,
+  aiTokensUsed,
+  onRefreshUserProfile,
   conversations,
   loadingConversations,
   conversationsError,
@@ -49,7 +50,8 @@ export function AiConversationHome({
 
   useEffect(() => {
     void onRefreshConversations();
-  }, [onRefreshConversations]);
+    void onRefreshUserProfile();
+  }, [onRefreshConversations, onRefreshUserProfile]);
 
   useEffect(() => {
     let cancelled = false;
@@ -73,18 +75,31 @@ export function AiConversationHome({
     };
   }, []);
 
-  const typeLabels = useMemo(() => {
-    const friendMap = new Map(friendTypes.map((type) => [type.id, type.label]));
-    const buddyMap = new Map(buddyTypes.map((type) => [type.id, type.label]));
-    return { friendMap, buddyMap };
-  }, [friendTypes, buddyTypes]);
+  const sortedConversations = useMemo(
+    () =>
+      [...conversations].sort(
+        (a, b) => Date.parse(b.lastInteractionAt) - Date.parse(a.lastInteractionAt),
+      ),
+    [conversations],
+  );
+
+  const tokensDepleted = aiTokenBalance <= 0;
 
   if (showNewConversation) {
     return (
       <ScenarioSelect
-        onSelect={(options) => {
-          onStartScenario(options);
-          setShowNewConversation(false);
+        conversations={conversations}
+        onSelect={async (options) => {
+          const started = await onStartScenario(options);
+          if (started) {
+            setShowNewConversation(false);
+          }
+        }}
+        onResumeThread={async (conversationId) => {
+          const resumed = await onSelectConversation(conversationId);
+          if (resumed) {
+            setShowNewConversation(false);
+          }
         }}
         onBack={() => setShowNewConversation(false)}
         isLoading={isStartingScenario}
@@ -96,11 +111,17 @@ export function AiConversationHome({
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
-      <div className="mx-auto max-w-3xl">
+      <div className="mx-auto max-w-5xl">
         <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">AI会話</h1>
             <p className="mt-1 text-sm text-gray-600">ユーザー ID: {userId}</p>
+            <p className="mt-1 text-sm text-gray-600">
+              残り AI トークン: {aiTokenBalance.toLocaleString()}
+            </p>
+            <p className="mt-0.5 text-xs text-gray-500">
+              累計消費: {aiTokensUsed.toLocaleString()}
+            </p>
           </div>
           <button
             type="button"
@@ -117,14 +138,26 @@ export function AiConversationHome({
           </div>
         ) : null}
 
+        {startError ? (
+          <div className="mb-4">
+            <ErrorBanner message={startError} onDismiss={onDismissStartError} />
+          </div>
+        ) : null}
+
+        {tokensDepleted ? (
+          <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            AIトークンの残高がありません。新しい会話を始めるにはトークンの追加が必要です。
+          </div>
+        ) : null}
+
         <div className="mb-4">
           <button
             type="button"
             onClick={() => setShowNewConversation(true)}
-            disabled={isStartingScenario || loadingTypes}
+            disabled={isStartingScenario || loadingTypes || tokensDepleted}
             className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300"
           >
-            新しい会話を始める
+            新しいスレッドを始める
           </button>
         </div>
 
@@ -139,51 +172,18 @@ export function AiConversationHome({
             </div>
           ) : conversations.length === 0 ? (
             <div className="px-5 py-10 text-center text-sm text-gray-600">
-              まだ会話がありません。「新しい会話を始める」から始めてください。
+              まだ会話がありません。「新しいスレッドを始める」から始めてください。
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[640px] text-left">
-                <thead>
-                  <tr className="border-b border-gray-200 text-xs text-gray-500">
-                    <th scope="col" className="px-5 py-3 font-medium">
-                      AIフレンド
-                    </th>
-                    <th scope="col" className="px-5 py-3 font-medium">
-                      バディ
-                    </th>
-                    <th scope="col" className="px-5 py-3 font-medium">
-                      会話を始めた日時
-                    </th>
-                    <th scope="col" className="px-5 py-3 font-medium">
-                      最後に会話した日時
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {conversations.map((conversation) => {
-                    const friendLabel =
-                      typeLabels.friendMap.get(conversation.friendTypeId) ?? conversation.friendTypeId;
-                    const buddyLabel =
-                      typeLabels.buddyMap.get(conversation.buddyTypeId) ?? conversation.buddyTypeId;
-                    return (
-                      <tr
-                        key={conversation.conversationId}
-                        onClick={() => onSelectConversation(conversation.conversationId)}
-                        className="cursor-pointer text-sm transition hover:bg-gray-50"
-                      >
-                        <td className="px-5 py-4 font-medium text-gray-900">{friendLabel}</td>
-                        <td className="px-5 py-4 text-gray-900">{buddyLabel}</td>
-                        <td className="px-5 py-4 text-gray-600">{formatDateTime(conversation.createdAt)}</td>
-                        <td className="px-5 py-4 text-gray-600">
-                          {formatDateTime(conversation.lastInteractionAt)}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <AiConversationThreadTable
+              threads={sortedConversations}
+              friendTypes={friendTypes}
+              buddyTypes={buddyTypes}
+              onSelectThread={(conversationId) => {
+                void onSelectConversation(conversationId);
+              }}
+              disabled={isStartingScenario}
+            />
           )}
         </section>
       </div>

@@ -14,6 +14,7 @@ type FriendPanelProps = {
   onRewindTo?: (messageId: string) => void;
   inputRef?: RefObject<HTMLTextAreaElement | null>;
   peerInputRef?: RefObject<HTMLTextAreaElement | null>;
+  inputDisabled?: boolean;
 };
 
 export function FriendPanel({
@@ -25,6 +26,7 @@ export function FriendPanel({
   onRewindTo,
   inputRef: inputRefProp,
   peerInputRef,
+  inputDisabled = false,
 }: FriendPanelProps) {
   const displayName = friendType?.label ?? 'フレンド';
   const subtitle = friendType?.subtitle ?? '英語で会話しましょう';
@@ -99,7 +101,7 @@ export function FriendPanel({
           peerInputRef={peerInputRef}
           placeholder="Type your reply in English..."
           onSend={onSend}
-          disabled={isBusy}
+          disabled={isBusy || inputDisabled}
           buttonLabel="Send"
         />
       </div>

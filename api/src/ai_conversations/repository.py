@@ -9,7 +9,8 @@ from src.db.client import get_table
 from src.db.keys import conversation_sk, user_pk
 
 from .specs import ID_PREFIX, ID_WIDTH, SCENARIO_IDS, SUPPORT_TYPES, validate_conversation_id
-from src.character_types import get_buddy_type
+from .thread_labels import build_thread_label
+from src.character_types import get_buddy_type, get_friend_type
 from src.users.validation import now_iso
 
 
@@ -44,12 +45,16 @@ def _item_to_list_entry(item: dict[str, Any]) -> dict[str, Any]:
     if messages:
         last_message_preview = str(messages[-1].get("content", ""))[:120]
 
+    thread_index = item.get("threadIndex")
+    thread_label = item.get("threadLabel")
     return {
         "conversationId": item["conversationId"],
         "scenarioId": item["scenarioId"],
         "friendTypeId": item["friendTypeId"],
         "buddyTypeId": item["buddyTypeId"],
         "supportType": item["supportType"],
+        "threadIndex": int(thread_index) if thread_index is not None else 0,
+        "threadLabel": str(thread_label or ""),
         "createdAt": item["createdAt"],
         "updatedAt": item["updatedAt"],
         "lastInteractionAt": item["lastInteractionAt"],
@@ -63,6 +68,91 @@ def _item_to_detail(item: dict[str, Any]) -> dict[str, Any]:
         **_item_to_list_entry(item),
         "messages": messages,
     }
+
+
+def _query_conversation_items(user_id: str) -> list[dict[str, Any]]:
+    table = get_table()
+    response = table.query(
+        KeyConditionExpression=Key("PK").eq(user_pk(user_id)) & Key("SK").begins_with("CONV#"),
+    )
+    return list(response.get("Items", []))
+
+
+def _persist_thread_metadata(user_id: str, conversation_id: str, thread_index: int, thread_label: str) -> None:
+    get_table().update_item(
+        Key={
+            "PK": user_pk(user_id),
+            "SK": conversation_sk(conversation_id),
+        },
+        UpdateExpression="SET threadIndex = :threadIndex, threadLabel = :threadLabel",
+        ExpressionAttributeValues={
+            ":threadIndex": thread_index,
+            ":threadLabel": thread_label,
+        },
+    )
+
+
+def _ensure_thread_metadata(user_id: str, items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    if not items:
+        return []
+
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for item in items:
+        friend_type_id = str(item.get("friendTypeId", ""))
+        grouped.setdefault(friend_type_id, []).append(item)
+
+    result: list[dict[str, Any]] = []
+    for friend_type_id, friend_items in grouped.items():
+        try:
+            friend_label = get_friend_type(friend_type_id).label
+        except ValueError:
+            friend_label = friend_type_id
+
+        sorted_items = sorted(friend_items, key=lambda item: item.get("createdAt", ""))
+        next_index = max(
+            (int(item["threadIndex"]) for item in sorted_items if item.get("threadIndex") is not None),
+            default=0,
+        ) + 1
+
+        for item in sorted_items:
+            conversation_id = str(item["conversationId"])
+            thread_index = item.get("threadIndex")
+            thread_label = item.get("threadLabel")
+
+            if thread_index is None:
+                thread_index = next_index
+                next_index += 1
+            else:
+                thread_index = int(thread_index)
+
+            if not thread_label:
+                thread_label = build_thread_label(friend_label, thread_index)
+
+            if item.get("threadIndex") is None or not item.get("threadLabel"):
+                _persist_thread_metadata(user_id, conversation_id, thread_index, thread_label)
+
+            result.append(
+                {
+                    **item,
+                    "threadIndex": thread_index,
+                    "threadLabel": thread_label,
+                }
+            )
+
+    return result
+
+
+def _next_thread_index(user_id: str, friend_type_id: str) -> int:
+    items = _query_conversation_items(user_id)
+    items = _ensure_thread_metadata(user_id, items)
+    max_index = 0
+    for item in items:
+        if str(item.get("friendTypeId", "")) != friend_type_id:
+            continue
+        thread_index = item.get("threadIndex")
+        if thread_index is not None:
+            max_index = max(max_index, int(thread_index))
+    return max_index + 1
 
 
 def _next_conversation_id(user_id: str) -> str:
@@ -97,13 +187,10 @@ def _get_conversation_item(user_id: str, conversation_id: str) -> dict[str, Any]
 
 
 def list_conversations(user_id: str) -> list[dict[str, Any]]:
-    table = get_table()
-    response = table.query(
-        KeyConditionExpression=Key("PK").eq(user_pk(user_id)) & Key("SK").begins_with("CONV#"),
-    )
-    items = [_item_to_list_entry(item) for item in response.get("Items", [])]
-    items.sort(key=lambda item: item.get("lastInteractionAt", ""), reverse=True)
-    return items
+    items = _ensure_thread_metadata(user_id, _query_conversation_items(user_id))
+    entries = [_item_to_list_entry(item) for item in items]
+    entries.sort(key=lambda item: item.get("lastInteractionAt", ""), reverse=True)
+    return entries
 
 
 def create_conversation(
@@ -121,6 +208,11 @@ def create_conversation(
     if not friend_type_id.strip() or not buddy_type_id.strip():
         raise ValueError("friendTypeId and buddyTypeId are required")
 
+    normalized_friend_type_id = friend_type_id.strip()
+    friend_type = get_friend_type(normalized_friend_type_id)
+    thread_index = _next_thread_index(user_id, normalized_friend_type_id)
+    thread_label = build_thread_label(friend_type.label, thread_index)
+
     conversation_id = _next_conversation_id(user_id)
     now = now_iso()
     item = {
@@ -129,9 +221,11 @@ def create_conversation(
         "entityType": "AI_CONVERSATION",
         "conversationId": conversation_id,
         "scenarioId": scenario_id,
-        "friendTypeId": friend_type_id.strip(),
+        "friendTypeId": normalized_friend_type_id,
         "buddyTypeId": buddy_type_id.strip(),
         "supportType": support_type,
+        "threadIndex": thread_index,
+        "threadLabel": thread_label,
         "createdAt": now,
         "updatedAt": now,
         "lastInteractionAt": now,
@@ -143,11 +237,13 @@ def create_conversation(
 
 def get_conversation(user_id: str, conversation_id: str) -> dict[str, Any]:
     item = _get_conversation_item(user_id, conversation_id)
+    [item] = _ensure_thread_metadata(user_id, [item])
     return _item_to_detail(item)
 
 
 def save_messages(user_id: str, conversation_id: str, messages: list[dict[str, Any]]) -> dict[str, Any]:
     item = _get_conversation_item(user_id, conversation_id)
+    [item] = _ensure_thread_metadata(user_id, [item])
     now = now_iso()
     sanitized = _sanitize_messages(messages)
     table = get_table()
@@ -174,6 +270,7 @@ def update_conversation(
     buddy_type_id: str | None = None,
 ) -> dict[str, Any]:
     item = _get_conversation_item(user_id, conversation_id)
+    [item] = _ensure_thread_metadata(user_id, [item])
     updates: list[str] = []
     values: dict[str, Any] = {}
 

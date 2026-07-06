@@ -17,7 +17,7 @@ export function LoginScreen({ onLogin, loading = false, error, onDismissError }:
       <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
         <h1 className="text-2xl font-bold text-gray-900">バディートーク</h1>
         <p className="mt-2 text-sm text-gray-600">
-          ユーザー ID を入力してログインしてください。未登録の ID は自動的に作成されます。
+          管理画面で登録されたユーザー ID のみログインできます。
         </p>
 
         {error ? (

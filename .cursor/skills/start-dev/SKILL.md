@@ -118,7 +118,7 @@ After API is up, run (with `required_permissions: ["full_network"]`):
 ```bash
 curl -s -X POST http://localhost:8000/conversation \
   -H 'Content-Type: application/json' \
-  -d '{"type":"message","conversationMode":"real","scenarioId":"sns","mode":"translate","realFriendId":"real-0001","englishText":"ping","aiModel":"qwen"}'
+  -d '{"type":"opening","scenarioId":"sns","friendType":"mia","buddyType":"coach","aiModel":"qwen"}'
 ```
 
 - **Success:** response contains `"text"` (HTTP 200 JSON).
@@ -134,7 +134,7 @@ curl -s -X POST http://localhost:8000/users/login \
   -d '{"userId":"dev-check"}'
 ```
 
-- **Success:** HTTP 200 with `"user"` and `"isNew"` fields.
+- **Success:** HTTP 200 with `"user"` field.
 - **Failure:** re-run DynamoDB steps or check `api/.env`.
 
 ## Start frontend (background)

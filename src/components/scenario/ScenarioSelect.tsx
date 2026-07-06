@@ -1,14 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { BUDDY_SUPPORT_TYPES, DEFAULT_BUDDY_SUPPORT_TYPE, getBuddySupportTypeOption } from '../../data/buddySupportTypes';
 import { DEFAULT_SCENARIO_ID } from '../../data/scenarios';
 import { fetchBuddyTypes, fetchFriendTypes, getMediaUrl } from '../../lib/apiClient';
+import { AiConversationThreadTable } from '../conversation/AiConversationThreadTable';
 import type { StartScenarioOptions } from '../../hooks/useConversation';
+import type { AiConversationListItem } from '../../types/aiConversation';
 import type { BuddySupportType, BuddyType, BuddyTypeId, FriendType, FriendTypeId } from '../../types/conversation';
 import { ErrorBanner } from '../common/ErrorBanner';
 import { LoadingIndicator } from '../common/LoadingIndicator';
 
 type ScenarioSelectProps = {
-  onSelect: (options: StartScenarioOptions) => void;
+  conversations?: AiConversationListItem[];
+  onSelect: (options: StartScenarioOptions) => void | Promise<void>;
+  onResumeThread?: (conversationId: string) => void | Promise<void>;
   onBack?: () => void;
   isLoading?: boolean;
   error?: string | null;
@@ -92,7 +96,9 @@ function FriendTypeCard({
 }
 
 export function ScenarioSelect({
+  conversations = [],
   onSelect,
+  onResumeThread,
   onBack,
   isLoading = false,
   error = null,
@@ -139,6 +145,26 @@ export function ScenarioSelect({
   const hasFriends = friendTypes.length > 0;
   const hasBuddies = buddyTypes.length > 0;
 
+  const existingThreads = useMemo(
+    () =>
+      conversations
+        .filter((conversation) => conversation.friendTypeId === friendTypeId)
+        .sort((a, b) => Date.parse(b.lastInteractionAt) - Date.parse(a.lastInteractionAt)),
+    [conversations, friendTypeId],
+  );
+
+  const handleStartNewThread = () => {
+    if (!selectedFriendType || !selectedBuddyType) return;
+    onSelect({
+      scenarioId: DEFAULT_SCENARIO_ID,
+      friendType: selectedFriendType,
+      friendTypeId: selectedFriendType.id,
+      buddyType: selectedBuddyType,
+      buddyTypeId: selectedBuddyType.id,
+      supportType,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       <div className="mx-auto max-w-4xl px-4 py-12">
@@ -156,9 +182,9 @@ export function ScenarioSelect({
             </div>
           ) : null}
           <p className="text-sm font-medium uppercase tracking-wide text-blue-600">AIモード</p>
-          <h1 className="mt-2 text-3xl font-bold text-gray-900">AIトップ画面</h1>
+          <h1 className="mt-2 text-3xl font-bold text-gray-900">新しいスレッド</h1>
           <p className="mt-3 text-gray-600">
-            AIフレンドとバディを選び、SNSで知り合った人との初めての会話を始めましょう
+            AIフレンドとバディを選び、新しいスレッドを始めるか、既存スレッドの続きから話しましょう
           </p>
         </header>
 
@@ -188,12 +214,6 @@ export function ScenarioSelect({
           {!loadingTypes && !hasFriends ? (
             <div className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center">
               <p className="text-sm text-gray-600">登録済みのフレンドがありません。</p>
-              <a
-                href="/admin/friend-characters"
-                className="mt-3 inline-block text-sm font-medium text-blue-600 underline-offset-2 hover:underline"
-              >
-                フレンドを作成する（管理者）
-              </a>
             </div>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -212,6 +232,27 @@ export function ScenarioSelect({
             </div>
           )}
         </section>
+
+        {selectedFriendType && existingThreads.length > 0 ? (
+          <section className="mb-10">
+            <h2 className="mb-1 text-lg font-semibold text-gray-900">既存のスレッド</h2>
+            <p className="mb-4 text-sm text-gray-600">
+              {selectedFriendType.label} との会話スレッド。続きから話すか、新しいスレッドを作成できます。
+            </p>
+            <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+              <AiConversationThreadTable
+                threads={existingThreads}
+                friendTypes={friendTypes}
+                buddyTypes={buddyTypes}
+                onSelectThread={(conversationId) => {
+                  void onResumeThread?.(conversationId);
+                }}
+                actionLabel="続きから"
+                disabled={isLoading || loadingTypes || !onResumeThread}
+              />
+            </div>
+          </section>
+        ) : null}
 
         <section className="mb-10">
           <h2 className="mb-1 text-lg font-semibold text-gray-900">相談相手</h2>
@@ -270,35 +311,11 @@ export function ScenarioSelect({
           <button
             type="button"
             disabled={isLoading || loadingTypes || !selectedFriendType || !selectedBuddyType}
-            onClick={() => {
-              if (!selectedFriendType || !selectedBuddyType) return;
-              onSelect({
-                scenarioId: DEFAULT_SCENARIO_ID,
-                friendType: selectedFriendType,
-                friendTypeId: selectedFriendType.id,
-                buddyType: selectedBuddyType,
-                buddyTypeId: selectedBuddyType.id,
-                supportType,
-              });
-            }}
+            onClick={handleStartNewThread}
             className="rounded-xl bg-blue-600 px-8 py-3 text-base font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300"
           >
-            会話を始める
+            {existingThreads.length > 0 ? '新しいスレッドを作成' : '会話を始める'}
           </button>
-          <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-500">
-            <a
-              href="/admin/friend-characters"
-              className="underline-offset-2 hover:text-gray-700 hover:underline"
-            >
-              フレンド作成（管理者）
-            </a>
-            <a
-              href="/admin/character-images"
-              className="underline-offset-2 hover:text-gray-700 hover:underline"
-            >
-              キャラ画像作成（管理者）
-            </a>
-          </div>
         </div>
       </div>
     </div>

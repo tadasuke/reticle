@@ -6,6 +6,8 @@ export type AiConversationListItem = {
   friendTypeId: FriendTypeId;
   buddyTypeId: BuddyTypeId;
   supportType: BuddySupportType;
+  threadIndex: number;
+  threadLabel: string;
   createdAt: string;
   updatedAt: string;
   lastInteractionAt: string;

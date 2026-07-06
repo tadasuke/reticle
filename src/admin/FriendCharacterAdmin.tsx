@@ -2,6 +2,7 @@ import { ErrorBanner } from '../components/common/ErrorBanner';
 import { ConfirmDialog } from '../components/common/ConfirmDialog';
 import { FriendCharacterForm } from './components/FriendCharacterForm';
 import { FriendCharacterList } from './components/FriendCharacterList';
+import { AdminNav } from './components/AdminNav';
 import { useFriendCharacterAdmin } from '../hooks/useFriendCharacterAdmin';
 import { useState } from 'react';
 
@@ -14,7 +15,7 @@ export function FriendCharacterAdmin() {
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
       <header className="border-b border-gray-200 bg-white px-4 py-4">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Admin</p>
             <h1 className="text-xl font-bold text-gray-900">フレンドキャラクター作成</h1>
@@ -22,20 +23,7 @@ export function FriendCharacterAdmin() {
               名前・年齢・ペルソナを登録します。画像はフォルダへ手動配置
             </p>
           </div>
-          <div className="flex shrink-0 gap-2">
-            <a
-              href="/admin/character-images"
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              画像作成
-            </a>
-            <a
-              href="/"
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              トップへ戻る
-            </a>
-          </div>
+          <AdminNav current="friends" />
         </div>
       </header>
 

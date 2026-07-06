@@ -10,7 +10,7 @@ export const aiModels: AiModel[] = [
   {
     id: 'qwen',
     label: 'Qwen',
-    description: 'Alibaba Cloud の Qwen（qwen-plus）',
+    description: 'Alibaba Cloud の Qwen（qwen3.7-plus）',
   },
   {
     id: 'claude',

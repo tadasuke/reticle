@@ -20,7 +20,7 @@
 | 項目 | 方針 |
 |------|------|
 | サービスの核 | 「今の会話に合った、あの人からの写真が届く」体験 |
-| AI プロバイダ | Alibaba Cloud DashScope（Singapore）。テキストは既存の `qwen-plus`、画像は Qwen-Image / Image Edit 系 |
+| AI プロバイダ | Alibaba Cloud DashScope（Singapore）。テキストは既存の `qwen3.7-plus`、画像は Qwen-Image / Image Edit 系 |
 | 事前用意カタログ | **採用しない**（会話写真はリアルタイム生成が前提） |
 | 参照画像 | 各キャラ **1 枚** のマスターポートレートは事前に用意（顔の一貫性のため） |
 | 本番会話画面 | テキスト応答は即時、画像は非同期で後から届く |
@@ -60,7 +60,7 @@ sequenceDiagram
   participant U as ユーザー
   participant F as フロント
   participant API as FastAPI / Lambda
-  participant Chat as qwen-plus
+  participant Chat as qwen3.7-plus
   participant Img as Qwen-Image API
   participant S3 as S3 + CloudFront
 
@@ -108,7 +108,7 @@ sequenceDiagram
 
 ## 会話フロー設計
 
-### Step 1: 会話 LLM（`qwen-plus`）が送信判定
+### Step 1: 会話 LLM（`qwen3.7-plus`）が送信判定
 
 `LISA_RULES`（既存）に加え、画像送信に関するルールを将来追加する。
 
